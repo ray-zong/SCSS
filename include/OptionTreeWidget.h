@@ -3,6 +3,9 @@
 
 #include <QWidget>
 
+class QTreeWidget;
+class QTreeWidgetItem;
+
 class OptionTreeWidget : public QWidget
 {
     Q_OBJECT
@@ -10,6 +13,19 @@ class OptionTreeWidget : public QWidget
 public:
     explicit OptionTreeWidget(QWidget *parent = 0);
     ~OptionTreeWidget();
+
+private:
+    //列表
+    void createTreeWidget();
+
+private slots:
+    void currentItemChanged(QTreeWidgetItem*,QTreeWidgetItem*);
+
+signals:
+    void currentOptionChanged(const int, const int);
+
+private:
+    QTreeWidget *m_pTreeWidget;
 };
 
 #endif // OPTIONTREEWIDGET_H

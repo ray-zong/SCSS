@@ -1,57 +1,107 @@
-﻿#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+﻿#include "ChooseWidget.h"
 
-#include <QMainWindow>
+#include <QLabel>
+#include <QComboBox>
+#include <QGridLayout>
+#include <QSqlQuery>
+#include <QSqlDatabase>
+#include <QMessageBox>
+#include <QDebug>
 
-class QDockWidget;
-class QStackedWidget;
-class OptionTreeWidget;
-class RetakeCourseWidget;
-class SelectableCourseWidget;
-class TakedCourseWidget;
+#include "ConnectionPool.h"
 
-namespace Ui {
-class MainWindow;
+ChooseWidget::ChooseWidget(QWidget *parent)
+    : QWidget(parent)
+    , m_pSpecialtyComboBox(NULL)
+    , m_pTermComboBox(NULL)
+{
+    initWidget();
+    querySpecialty();
 }
 
-class MainWindow : public QMainWindow
+ChooseWidget::~ChooseWidget()
 {
-    Q_OBJECT
 
-public:
-    explicit MainWindow(QWidget *parent = 0);
-    ~MainWindow();
+}
 
-private:
-    //菜单栏
-    void createMenu();
-    //左侧栏：显示课程状态
-    void createDockWidget();
-    //主界面：显示课程信息
-    void createMainWidget();
+void ChooseWidget::initWidget()
+{
+    QLabel *pLabel_specialty = new QLabel(this);
+    pLabel_specialty->setText(tr("Specialty") + ":");
 
-private slots:
-    //打开教学计划
-    void openTeachingPlan();
-    //打开培养方案
-    void openTrainingProgram();
-    //语言切换
-    void changeLanguage();
-    //显示状态改变
-    void currentOptionChanged(const int, const int);
-    //打开工具栏
-    void openOptionDialog();
+    m_pSpecialtyComboBox = new QComboBox(this);
+    connect(m_pSpecialtyComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(emitCurrentSpecialtyChanged(int)));
 
-private:
-    Ui::MainWindow *ui;
+    QLabel *pLabel_term = new QLabel(this);
+    pLabel_term->setText(tr("Term") + ":");
+    m_pTermComboBox = new QComboBox(this);
+    connect(m_pTermComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(emitCurrentTermChanged(int)));
 
-    QDockWidget *m_pDockWidget;
-    QStackedWidget *m_pStackedWidget;
-    OptionTreeWidget *m_pOptionTreeWidget;
-    RetakeCourseWidget *m_pRetakeCourseWidget;
-    SelectableCourseWidget *m_pSelectableCourseWidget;
-    TakedCourseWidget *m_pTakedCourseWidget;
+    QGridLayout *pGridLayout = new QGridLayout(this);
+    pGridLayout->addWidget(pLabel_specialty,0,0);
+    pGridLayout->addWidget(m_pSpecialtyComboBox,0,1);
+    pGridLayout->addWidget(pLabel_term,1,0);
+    pGridLayout->addWidget(m_pTermComboBox,1,1);
+}
 
-};
+void ChooseWidget::querySpecialty()
+{
+    Q_ASSERT(m_pSpecialtyComboBox != NULL);
+    Q_ASSERT(m_pTermComboBox != NULL);
 
-#endif // MAINWINDOW_H
+    //连接数据库
+    QSqlDatabase db;
+    if(!createConnection(db))
+    {
+        qDebug() << __FILE__ << __LINE__ << "error";
+        return ;
+    }
+
+    //查询
+    QSqlQuery query("SELECT Name FROM specialty_info", db);
+
+    while(query.next())
+    {
+        QString item = query.value(0).toString();
+        m_pSpecialtyComboBox->addItem(item);
+    }
+
+    query.exec("SELECT Name FROM course_term");
+    while(query.next())
+    {
+        QString item = query.value(0).toString();
+        m_pTermComboBox->addItem(item);
+    }
+
+    //连接使用完后需要释放回数据库连接池
+    ConnectionPool::closeConnection(db);
+}
+
+bool ChooseWidget::createConnection(QSqlDatabase &db)
+{
+    //从数据库连接池里取得连接
+    db = ConnectionPool::openConnection();
+
+    if(!db.isValid())
+    {
+        QMessageBox::critical(0, QObject::tr("Cannot open database"),
+                              QObject::tr("Unable to establish a database connecttion.\n"
+                                          "This example needs SQLite support. Please read"
+                                          "the Qt SQL driver documentation for information how"
+                                          "to build it.\n\n"
+                                          "Click Cancel to exit."), QMessageBox::Cancel);
+        return false;
+    }
+
+    return true;
+}
+
+void ChooseWidget::emitCurrentSpecialtyChanged(int index)
+{
+    emit currentSpecialtyChanged(index);
+}
+
+void ChooseWidget::emitCurrentTermChanged(int index)
+{
+    emit currentTermChanged(index);
+}

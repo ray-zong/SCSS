@@ -1,1 +1,7 @@
-<RCC/>
+<RCC>
+    <qresource prefix="/">
+        <file>translate/SCSS_cn.qm</file>
+        <file>qss/default.qss</file>
+        <file>image/SCSS.ico</file>
+    </qresource>
+</RCC>

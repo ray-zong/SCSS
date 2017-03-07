@@ -3,22 +3,24 @@
 
 #include <QWidget>
 
+class QTableWidget;
 
-class ReTakeCourseWidget : public QWidget
+class RetakeCourseWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit ReTakeCourseWidget(QWidget *parent = 0);
-    ~ReTakeCourseWidget();
+    explicit RetakeCourseWidget(QWidget *parent = 0);
+    ~RetakeCourseWidget();
 
 private:
+    void createTableWidget();
 
 
 private slots:
 
 private:
-
+    QTableWidget *m_pTableWidget;
 };
 
 #endif // RETAKECOURSEWIDGET_H

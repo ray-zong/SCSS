@@ -1,57 +1,36 @@
-﻿#ifndef MAINWINDOW_H
-#define MAINWINDOW_H
+﻿#ifndef CHOOSEWIDGET_H
+#define CHOOSEWIDGET_H
 
-#include <QMainWindow>
+#include <QWidget>
 
-class QDockWidget;
-class QStackedWidget;
-class OptionTreeWidget;
-class RetakeCourseWidget;
-class SelectableCourseWidget;
-class TakedCourseWidget;
+class QLabel;
+class QComboBox;
+class QSqlDatabase;
 
-namespace Ui {
-class MainWindow;
-}
-
-class MainWindow : public QMainWindow
+class ChooseWidget : public QWidget
 {
     Q_OBJECT
 
 public:
-    explicit MainWindow(QWidget *parent = 0);
-    ~MainWindow();
+    explicit ChooseWidget(QWidget *parent = 0);
+    ~ChooseWidget();
 
 private:
-    //菜单栏
-    void createMenu();
-    //左侧栏：显示课程状态
-    void createDockWidget();
-    //主界面：显示课程信息
-    void createMainWidget();
+    void initWidget();
+    void querySpecialty();
+    bool createConnection(QSqlDatabase& db);
 
 private slots:
-    //打开教学计划
-    void openTeachingPlan();
-    //打开培养方案
-    void openTrainingProgram();
-    //语言切换
-    void changeLanguage();
-    //显示状态改变
-    void currentOptionChanged(const int, const int);
-    //打开工具栏
-    void openOptionDialog();
+    void emitCurrentSpecialtyChanged(int index);
+    void emitCurrentTermChanged(int index);
+
+signals:
+    void currentSpecialtyChanged(int index);
+    void currentTermChanged(int index);
 
 private:
-    Ui::MainWindow *ui;
-
-    QDockWidget *m_pDockWidget;
-    QStackedWidget *m_pStackedWidget;
-    OptionTreeWidget *m_pOptionTreeWidget;
-    RetakeCourseWidget *m_pRetakeCourseWidget;
-    SelectableCourseWidget *m_pSelectableCourseWidget;
-    TakedCourseWidget *m_pTakedCourseWidget;
-
+    QComboBox *m_pSpecialtyComboBox;
+    QComboBox *m_pTermComboBox;
 };
 
-#endif // MAINWINDOW_H
+#endif // CHOOSEWIDGET_H

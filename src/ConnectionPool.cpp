@@ -118,7 +118,7 @@ QSqlDatabase ConnectionPoolPrivate::createConnection(const QString &connectionNa
 bool ConnectionPoolPrivate::readDBConfig()
 {
     hostName     = "";
-    databaseName = QCoreApplication::applicationDirPath() + "/data/spice.db";;
+    databaseName = QCoreApplication::applicationDirPath() + "/data/SCSS.db";;
     username     = "";
     password     = "";
     databaseType = "QSQLITE";
