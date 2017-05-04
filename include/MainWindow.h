@@ -26,10 +26,12 @@ public:
 private:
     //菜单栏
     void createMenu();
-    //左侧栏：显示课程状态
-    void createDockWidget();
     //主界面：显示课程信息
     void createMainWidget();
+    //显示已修课程
+    void displayTakedCourse();
+    //显示未修课程 index: 专业
+    void displaySelectableCourse(int specialty, int term);
 
 private slots:
     //打开教学计划
@@ -38,20 +40,19 @@ private slots:
     void openTrainingProgram();
     //语言切换
     void changeLanguage();
+    //关于
+    void aboutSoftware();
     //显示状态改变
     void currentOptionChanged(const int, const int);
     //打开工具栏
     void openOptionDialog();
-    //改变专业
-    void currentSpecialtyChanged(int index);
-    //改变学期
-    void currentTermChanged(int index);
+    //专业或者学期改变
+    void currentSpecialtyOrTermChanged(int specialty, int term);
 
 private:
     Ui::MainWindow *ui;
 
-    QDockWidget *m_pDockWidget;
-    QStackedWidget *m_pStackedWidget;
+    QTabWidget *m_pTabWidget;
     OptionTreeWidget *m_pOptionTreeWidget;
     RetakeCourseWidget *m_pRetakeCourseWidget;
     SelectableCourseWidget *m_pSelectableCourseWidget;

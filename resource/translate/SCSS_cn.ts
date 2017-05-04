@@ -22,12 +22,12 @@
         <translation></translation>
     </message>
     <message>
-        <location filename="../../src/MainWindow.cpp" line="34"/>
+        <location filename="../../src/MainWindow.cpp" line="37"/>
         <source>SCSS(Student Course Selection Guidance System)</source>
         <translation>学生选课指导系统</translation>
     </message>
     <message>
-        <location filename="../../src/MainWindow.cpp" line="51"/>
+        <location filename="../../src/MainWindow.cpp" line="57"/>
         <source>&amp;File</source>
         <translation>文件(&amp;F)</translation>
     </message>
@@ -36,47 +36,73 @@
         <translation type="vanished">加载</translation>
     </message>
     <message>
-        <location filename="../../src/MainWindow.cpp" line="54"/>
+        <location filename="../../src/MainWindow.cpp" line="60"/>
         <source>Open</source>
         <translation>打开</translation>
     </message>
     <message>
-        <location filename="../../src/MainWindow.cpp" line="56"/>
+        <location filename="../../src/MainWindow.cpp" line="62"/>
         <source>Teaching Plan</source>
         <translation>教学计划</translation>
     </message>
     <message>
-        <location filename="../../src/MainWindow.cpp" line="59"/>
+        <location filename="../../src/MainWindow.cpp" line="65"/>
         <source>Training Program</source>
         <translation>培训方案</translation>
     </message>
     <message>
-        <location filename="../../src/MainWindow.cpp" line="64"/>
+        <location filename="../../src/MainWindow.cpp" line="70"/>
         <source>&amp;Tool</source>
         <translation>工具(&amp;T)</translation>
     </message>
     <message>
-        <location filename="../../src/MainWindow.cpp" line="67"/>
+        <location filename="../../src/MainWindow.cpp" line="73"/>
         <source>Option</source>
         <translation>选项</translation>
     </message>
     <message>
-        <location filename="../../src/MainWindow.cpp" line="71"/>
+        <location filename="../../src/MainWindow.cpp" line="77"/>
         <source>&amp;Help</source>
         <translation>帮助(&amp;H)</translation>
     </message>
     <message>
-        <location filename="../../src/MainWindow.cpp" line="81"/>
-        <source>Course</source>
-        <translation>课程</translation>
+        <location filename="../../src/MainWindow.cpp" line="82"/>
+        <source>About</source>
+        <translation type="unfinished">关于</translation>
     </message>
     <message>
-        <location filename="../../src/MainWindow.cpp" line="124"/>
+        <location filename="../../src/MainWindow.cpp" line="122"/>
+        <source>Taked Course</source>
+        <translation>已修课程</translation>
+    </message>
+    <message>
+        <location filename="../../src/MainWindow.cpp" line="123"/>
+        <source>Selectable Course</source>
+        <translation>未修课程</translation>
+    </message>
+    <message>
+        <location filename="../../src/MainWindow.cpp" line="220"/>
+        <source>SCSS</source>
+        <translation>学生选课指导系统</translation>
+    </message>
+    <message>
+        <location filename="../../src/MainWindow.cpp" line="220"/>
+        <source>Version:1.0.0
+Rightcopy:Tsinghua University</source>
+        <translation>版本：1.0.0
+版权所有：清华大学</translation>
+    </message>
+    <message>
+        <source>Course</source>
+        <translation type="vanished">课程</translation>
+    </message>
+    <message>
+        <location filename="../../src/MainWindow.cpp" line="167"/>
         <source>Open Teaching Plan</source>
         <translation>打开教学计划</translation>
     </message>
     <message>
-        <location filename="../../src/MainWindow.cpp" line="146"/>
+        <location filename="../../src/MainWindow.cpp" line="190"/>
         <source>Open Training Program</source>
         <translation>打开培训方案</translation>
     </message>
@@ -85,8 +111,8 @@
         <translation type="vanished">打开</translation>
     </message>
     <message>
-        <location filename="../../src/MainWindow.cpp" line="124"/>
-        <location filename="../../src/MainWindow.cpp" line="146"/>
+        <location filename="../../src/MainWindow.cpp" line="167"/>
+        <location filename="../../src/MainWindow.cpp" line="190"/>
         <source>Files (*.txt)</source>
         <translation>文件(*.txt)</translation>
     </message>
@@ -308,8 +334,7 @@ Click Cancel to exit.</source>
 <context>
     <name>TakedCourseWidget</name>
     <message>
-        <location filename="../../src/TakedCourseWidget.cpp" line="137"/>
-        <location filename="../../src/TakedCourseWidget.cpp" line="163"/>
+        <location filename="../../src/TakedCourseWidget.cpp" line="202"/>
         <source>Course ID</source>
         <translation>课程号</translation>
     </message>
@@ -318,39 +343,33 @@ Click Cancel to exit.</source>
         <translation type="vanished">课序号</translation>
     </message>
     <message>
-        <location filename="../../src/TakedCourseWidget.cpp" line="124"/>
         <source>Teaching Plan</source>
-        <translation>教学计划</translation>
+        <translation type="vanished">教学计划</translation>
     </message>
     <message>
-        <location filename="../../src/TakedCourseWidget.cpp" line="138"/>
-        <location filename="../../src/TakedCourseWidget.cpp" line="164"/>
+        <location filename="../../src/TakedCourseWidget.cpp" line="203"/>
         <source>Course Name</source>
         <translation>课程名</translation>
     </message>
     <message>
-        <location filename="../../src/TakedCourseWidget.cpp" line="140"/>
-        <location filename="../../src/TakedCourseWidget.cpp" line="165"/>
+        <location filename="../../src/TakedCourseWidget.cpp" line="204"/>
         <source>Course Credit</source>
         <translation>学分</translation>
     </message>
     <message>
-        <location filename="../../src/TakedCourseWidget.cpp" line="142"/>
         <source>Course Group</source>
-        <translation>课程组</translation>
+        <translation type="vanished">课程组</translation>
     </message>
     <message>
-        <location filename="../../src/TakedCourseWidget.cpp" line="151"/>
         <source>Training Program</source>
-        <translation>培训方案</translation>
+        <translation type="vanished">培训方案</translation>
     </message>
     <message>
         <source>Course Hours</source>
         <translation type="vanished">学时</translation>
     </message>
     <message>
-        <location filename="../../src/TakedCourseWidget.cpp" line="141"/>
-        <location filename="../../src/TakedCourseWidget.cpp" line="166"/>
+        <location filename="../../src/TakedCourseWidget.cpp" line="205"/>
         <source>Course Grade</source>
         <translation>成绩</translation>
     </message>
@@ -359,9 +378,8 @@ Click Cancel to exit.</source>
         <translation type="vanished">替代课程</translation>
     </message>
     <message>
-        <location filename="../../src/TakedCourseWidget.cpp" line="139"/>
         <source>Course Attribute</source>
-        <translation>课程属性</translation>
+        <translation type="vanished">课程属性</translation>
     </message>
     <message>
         <source>Special Course</source>
@@ -372,14 +390,12 @@ Click Cancel to exit.</source>
         <translation type="vanished">标志</translation>
     </message>
     <message>
-        <location filename="../../src/TakedCourseWidget.cpp" line="135"/>
         <source>Year</source>
-        <translation>学年</translation>
+        <translation type="vanished">学年</translation>
     </message>
     <message>
-        <location filename="../../src/TakedCourseWidget.cpp" line="136"/>
         <source>Term</source>
-        <translation>学期</translation>
+        <translation type="vanished">学期</translation>
     </message>
     <message>
         <source>Examination Time</source>

@@ -53,8 +53,12 @@ bool TrainingProgramFileAnalysis::analysisDataHead(QFile &file)
         QString strData = codec->toUnicode(line);
         if(strData.contains(codec->toUnicode("是否完成")))
         {
-            qDebug() << strData;
+            qDebug() << __FILE__ << __LINE__ << strData;
             return true;
+        }
+        else
+        {
+            qDebug() << __FILE__ << __LINE__ << strData;
         }
     }
     return false;
@@ -67,8 +71,9 @@ bool TrainingProgramFileAnalysis::analysisDataContent(QFile &file)
     PersonalTrainingProgram *pPersonalTrainingProgram = new PersonalTrainingProgram;
     while (!file.atEnd()) {
         QByteArray line = file.readLine();
-        QString strData = codec->toUnicode(line);
+        QString strData = codec->toUnicode(line).trimmed();
 
+#if 0
         if(strData.contains(QRegExp(codec->toUnicode(c_szCourseAttrRegExp))))
         {
             //课程属性
@@ -147,6 +152,59 @@ bool TrainingProgramFileAnalysis::analysisDataContent(QFile &file)
         {
             qDebug() << __FILE__ << __LINE__ << "error:" << strData.trimmed();
         }
+#else
+        //QString strRegExp = QString(c_szNumberRegExp) + "\\s+" + codec->toUnicode("[\\x4e00-\\x9fa5]+")
+        //        + "\\s+" + "\\d" + "\\s+" + codec->toUnicode(c_szScoreRegExp);
+
+        QString strRegExp = QString(c_szNumberRegExp) + "\\s+" + "\\S+"
+                + "\\s+" + "\\d" + "\\s+" + codec->toUnicode(c_szScoreRegExp);
+
+        if(strData.contains(QRegExp(strRegExp)))
+        {
+            QStringList stringList = strData.split(" ", QString::SkipEmptyParts);
+            if(stringList.size() == 4)
+            {
+                //
+                pPersonalTrainingProgram->number = stringList.at(0).toInt();
+                pPersonalTrainingProgram->name = stringList.at(1);
+                pPersonalTrainingProgram->credit = stringList.at(2).toInt();
+                pPersonalTrainingProgram->score = stringList.at(3);
+            }
+            else if(stringList.size() > 4)
+            {
+                if(stringList.at(1).toInt() != 0)
+                {
+                    pPersonalTrainingProgram->number = stringList.at(1).toInt();
+                    pPersonalTrainingProgram->name = stringList.at(2);
+                    pPersonalTrainingProgram->credit = stringList.at(3).toInt();
+                    pPersonalTrainingProgram->score = stringList.at(4);
+                }
+                else if(stringList.at(2).toInt() != 0)
+                {
+                    pPersonalTrainingProgram->number = stringList.at(2).toInt();
+                    pPersonalTrainingProgram->name = stringList.at(3);
+                    pPersonalTrainingProgram->credit = stringList.at(4).toInt();
+                    pPersonalTrainingProgram->score = stringList.at(5);
+                }
+                else
+                {
+                    qDebug() << __FILE__ << __LINE__ << strData.trimmed();
+                    continue;
+                }
+            }
+            else
+            {
+                qDebug() << __FILE__ << __LINE__ << strData.trimmed();
+                continue;
+            }
+
+            m_vecPersonalTrainProgram.push_back(pPersonalTrainingProgram->clone());
+        }
+        else
+        {
+            qDebug() << __FILE__ << __LINE__ << strData.trimmed();
+        }
+#endif
     }
     return true;
 }

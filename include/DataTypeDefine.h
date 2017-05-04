@@ -4,6 +4,16 @@
 #include <QPair>
 #include <QString>
 
+//专业
+enum SpecialtyType
+{
+    AerospaceEngineering = 1,//航空航天工程
+    EngineeringMechanics = 2,//工程力学
+    EnergyAndPowerEngineering = 3,//能源与动力工程
+    PilotClass = 4,//飞行员班
+    QianXuesenMechanicsClass = 5//钱学森力学班
+};
+
 //学期
 enum TermSeason
 {
@@ -28,18 +38,20 @@ class IPersonalData
 public:
     IPersonalData(){}
     virtual ~IPersonalData(){}
+
+    int number;//课程号
+    QString name;//课程名
+    int credit;//学分
+    QString score;//总成绩
 };
+
 /////////本科生教学计划完成情况//////////////////////////////////
 class PersonalTeachingPlan : public IPersonalData
 {
 public:
     QPair<int , int> year;//学年
     int term;//学期
-    int number;//课程号
-    QString name;//课程名
     int courseAttribute;//课程属性
-    int credit;//学分
-    double score;//总成绩
     QString group;//所属课组
 
     PersonalTeachingPlan* clone()
@@ -71,10 +83,6 @@ class PersonalTrainingProgram : public IPersonalData
 public:
     //int courseAttribute;       //课程属性
     //QString group;             //课组名
-    int number;                  //课程号
-    QString name;                //课程名
-    int credit;                  //学分
-    QString score;               //成绩
     //int RepairedCredit;        //应修学分
     //int TakedCredit;           //完成学分
     //int RepairedCourseCount;   //应修门数
@@ -95,7 +103,8 @@ public:
 
 const char c_szIsFinishedRegExp[] = "是|否";
 const char c_szCourseAttrRegExp[] = "必修|限选|任选";
-const char c_szScoreRegExp[] = "(\\d{1}|[1-9]\\d{1}|100)|(未修|选课|通过)";
+const char c_szScoreRegExp[] = "((\\d{1}|[1-9]\\d{1}|100)|(未修|选课|通过)|([ABCDFPW][+-]{0,1})|(Inc)|(EX))";
+const char c_szCourseGroupRegExp[] ="";
 /////////////////////////////////////////////////////////////////
 
 

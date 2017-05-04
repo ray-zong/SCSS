@@ -7,6 +7,10 @@ class QLabel;
 class QComboBox;
 class QSqlDatabase;
 
+/**
+ * @brief 专业和学期选择
+ */
+
 class ChooseWidget : public QWidget
 {
     Q_OBJECT
@@ -14,6 +18,10 @@ class ChooseWidget : public QWidget
 public:
     explicit ChooseWidget(QWidget *parent = 0);
     ~ChooseWidget();
+    //当前专业
+    int currentSpecialty();
+    //当前学期
+    int currentTerm();
 
 private:
     void initWidget();
@@ -21,12 +29,10 @@ private:
     bool createConnection(QSqlDatabase& db);
 
 private slots:
-    void emitCurrentSpecialtyChanged(int index);
-    void emitCurrentTermChanged(int index);
+    void emitCurrentSpecialtyOrTermChanged(int index);
 
 signals:
-    void currentSpecialtyChanged(int index);
-    void currentTermChanged(int index);
+    void currentSpecialtyOrTermChanged(int specialty, int term);
 
 private:
     QComboBox *m_pSpecialtyComboBox;

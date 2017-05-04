@@ -36,7 +36,10 @@ SOURCES += src/main.cpp\
     src/TeachingPlanFileAnalysis.cpp \
     src/TrainingProgramFileAnalysis.cpp \
     src/ChooseWidget.cpp \
-    src/ConnectionPool.cpp
+    src/ConnectionPool.cpp \
+    src/AboutSoftware.cpp \
+    src/SelectCourseDelegate.cpp \
+    src/DatabaseQuery.cpp
 
 HEADERS  += include/MainWindow.h \
     include/OptionTreeWidget.h \
@@ -48,7 +51,10 @@ HEADERS  += include/MainWindow.h \
     include/TrainingProgramFileAnalysis.h \
     include/DataTypeDefine.h \
     include/ChooseWidget.h \
-    include/ConnectionPool.h
+    include/ConnectionPool.h \
+    include/AboutSoftware.h \
+    include/SelectCourseDelegate.h \
+    include/DatabaseQuery.h
 
 FORMS    += ui/MainWindow.ui
 

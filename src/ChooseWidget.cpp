@@ -24,24 +24,34 @@ ChooseWidget::~ChooseWidget()
 
 }
 
+int ChooseWidget::currentSpecialty()
+{
+    return m_pSpecialtyComboBox->currentIndex();
+}
+
+int ChooseWidget::currentTerm()
+{
+    return m_pTermComboBox->currentIndex();
+}
+
 void ChooseWidget::initWidget()
 {
     QLabel *pLabel_specialty = new QLabel(this);
     pLabel_specialty->setText(tr("Specialty") + ":");
 
     m_pSpecialtyComboBox = new QComboBox(this);
-    connect(m_pSpecialtyComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(emitCurrentSpecialtyChanged(int)));
+    connect(m_pSpecialtyComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(emitCurrentSpecialtyOrTermChanged(int)));
 
     QLabel *pLabel_term = new QLabel(this);
     pLabel_term->setText(tr("Term") + ":");
     m_pTermComboBox = new QComboBox(this);
-    connect(m_pTermComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(emitCurrentTermChanged(int)));
+    connect(m_pTermComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(emitCurrentSpecialtyOrTermChanged(int)));
 
     QGridLayout *pGridLayout = new QGridLayout(this);
-    pGridLayout->addWidget(pLabel_specialty,0,0);
-    pGridLayout->addWidget(m_pSpecialtyComboBox,0,1);
-    pGridLayout->addWidget(pLabel_term,1,0);
-    pGridLayout->addWidget(m_pTermComboBox,1,1);
+    pGridLayout->addWidget(pLabel_specialty, 0, 0);
+    pGridLayout->addWidget(m_pSpecialtyComboBox, 0, 1);
+    pGridLayout->addWidget(pLabel_term, 0, 2);
+    pGridLayout->addWidget(m_pTermComboBox, 0, 3);
 }
 
 void ChooseWidget::querySpecialty()
@@ -96,12 +106,10 @@ bool ChooseWidget::createConnection(QSqlDatabase &db)
     return true;
 }
 
-void ChooseWidget::emitCurrentSpecialtyChanged(int index)
+void ChooseWidget::emitCurrentSpecialtyOrTermChanged(int index)
 {
-    emit currentSpecialtyChanged(index);
-}
+    Q_UNUSED(index);
 
-void ChooseWidget::emitCurrentTermChanged(int index)
-{
-    emit currentTermChanged(index);
+    emit currentSpecialtyOrTermChanged(m_pSpecialtyComboBox->currentIndex(),
+                                 m_pTermComboBox->currentIndex());
 }

@@ -13,6 +13,7 @@
 
 #include "ConnectionPool.h"
 #include "DataTypeDefine.h"
+#include "SelectCourseDelegate.h"
 
 SelectableCourseWidget::SelectableCourseWidget(QWidget *parent)
     : QWidget(parent)
@@ -22,14 +23,9 @@ SelectableCourseWidget::SelectableCourseWidget(QWidget *parent)
     , m_nTerm(0)
 {
     m_pLabel_advise = new QLabel(this);
-    //    m_pLabel_advise->setText(tr("Advise") + ":" +"\n" +
-    //                             tr("Monday") + ":" + "\n" +
-    //                             tr("Tuesday") + ":" + "\n" +
-    //                             tr("Wednesday") + ":" + "\n" +
-    //                             tr("Thursday") + ":" + "\n" +
-    //                             tr("Friday") + ":" + "\n");
     m_pLabel_advise->setText(tr("Advise") + ":" + "\n");
     m_pTableWidget = createTableWidget();
+    m_pTableWidget->setItemDelegateForColumn(5, new SelectCourseDelegate);
 
     QVBoxLayout *pVLayout = new QVBoxLayout(this);
     pVLayout->addWidget(m_pLabel_advise);
@@ -41,12 +37,6 @@ SelectableCourseWidget::~SelectableCourseWidget()
 
 }
 
-void SelectableCourseWidget::setCurrentSpecialty(int specialty)
-{
-    m_nSpecialty = specialty;
-    selectCourseAnalysis();
-}
-
 QTableWidget * SelectableCourseWidget::createTableWidget()
 {
     QTableWidget *pTableWidget = new QTableWidget(this);
@@ -56,7 +46,7 @@ QTableWidget * SelectableCourseWidget::createTableWidget()
         pHeader->setSectionResizeMode(QHeaderView::Stretch);
 
         //不可编辑//
-        pTableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        //pTableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
         //课程号、课程名、课程属性、学分、学期//
         QStringList list;
@@ -64,7 +54,8 @@ QTableWidget * SelectableCourseWidget::createTableWidget()
              << tr("Course Name")
              << tr("Course Attribute")
              << tr("Course Credit")
-             << tr("Term");
+             << tr("Term")
+             << tr("Select");
         //设置列数//
         pTableWidget->setColumnCount(list.count());
         pTableWidget->setHorizontalHeaderLabels(list);
@@ -86,7 +77,12 @@ bool SelectableCourseWidget::selectCourseAnalysis()
     QTableWidgetItem *pItem = NULL;
     //1.依据专业查找所有课程
     QMap<int, QVector<DB_SpecialtyCourse> > mapToVecSpecialtyCourse;
-    QSqlQuery query(QString("SELECT Number,Attribute,Credit,Term,CreditGroup FROM specialty_course WHERE Specialty=%1").arg(m_nSpecialty), db);
+    QSqlQuery query(QString("SELECT "
+                                "Number,Attribute,Credit,Term,CreditGroup "
+                            "FROM "
+                                "specialty_course "
+                            "WHERE "
+                                "Specialty=%1").arg(m_nSpecialty), db);
     int i = 0;
     m_pTableWidget->setRowCount(0);
     m_pTableWidget->clearContents();
@@ -137,6 +133,11 @@ bool SelectableCourseWidget::selectCourseAnalysis()
             pItem->setTextAlignment(Qt::AlignCenter);
             m_pTableWidget->setItem(i, j, pItem);
         }
+        //选课
+        pItem = new QTableWidgetItem();
+        pItem->setTextAlignment(Qt::AlignCenter);
+        m_pTableWidget->setItem(i, 5, pItem);
+        m_pTableWidget->openPersistentEditor(pItem);
 
 
         //first
@@ -193,10 +194,76 @@ bool SelectableCourseWidget::selectCourseAnalysis()
     return true;
 }
 
-void SelectableCourseWidget::setCurrentTerm(int term)
+bool SelectableCourseWidget::displaySelectCourseInfo(int specialty, int term)
 {
+    m_nSpecialty = specialty;
     m_nTerm = term;
-    selectCourseAnalysis();
+
+    QSqlDatabase db;
+    if(!createConnection(db))
+    {
+        qDebug() << __FILE__ << __LINE__ << "error: cannot open the database";
+        return false;
+    }
+
+    //课程号、课程名、课程属性、学分、学期
+    //1.根据专业选择所有课程
+    QSqlQuery query(QString("SELECT DISTINCT "
+                    "specialty_course.Number,"
+                    "course_info.Name,"
+                    "course_attribute.Attribute,"
+                    "specialty_course.Credit,"
+                    "specialty_course.Term "
+                "FROM "
+                    "specialty_course,"
+                    "course_info,"
+                    "course_attribute "
+                "WHERE "
+                    "specialty_course.Specialty = %1 "
+                "AND "
+                  "course_attribute.ID = specialty_course.Attribute "
+                "AND "
+                    "specialty_course.Number = course_info.Number").arg(specialty), db);
+    //2.根据已修课程移除课程
+    //3.根据学期移除课程
+
+    QTableWidgetItem *pItem = NULL;
+    m_pTableWidget->setRowCount(0);
+    m_pTableWidget->clearContents();
+    int i = 0;
+    while(query.next())
+    {
+        m_pTableWidget->insertRow(i);
+        //课程号//
+        //课程名//
+        //课程属性//
+        //学分//
+        //学期//
+        for(int j = 0; j < 5; ++j)
+        {
+            pItem = new QTableWidgetItem(query.value(j).toString());
+            pItem->setTextAlignment(Qt::AlignCenter);
+            m_pTableWidget->setItem(i, j, pItem);
+        }
+        //选课
+        pItem = new QTableWidgetItem();
+        pItem->setTextAlignment(Qt::AlignCenter);
+        m_pTableWidget->setItem(i, 5, pItem);
+        m_pTableWidget->openPersistentEditor(pItem);
+
+        ++i;
+    }
+
+    if(i == 0)
+    {
+        qDebug() << __FILE__ << __LINE__ << "error";
+        return false;
+    }
+
+    //连接使用完后需要释放回数据库连接池
+    ConnectionPool::closeConnection(db);
+
+    return true;
 }
 
 void SelectableCourseWidget::setTakedCourseData(const QVector<IPersonalData *> &vecPersonalData)

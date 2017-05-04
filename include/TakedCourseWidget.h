@@ -15,19 +15,23 @@ public:
     explicit TakedCourseWidget(QWidget *parent = 0);
     ~TakedCourseWidget();
 
-    //显示教学计划
-    void displayTeachingPlan(QVector<IPersonalData* >);
-    //显示培训方案
-    void displayTrainingProgram(const QVector<IPersonalData *> &);
+    //显示已修课程信息
+    void displayTakedCourseInfo();
+
+    //设置课程数据//
+    void setData(const QVector<IPersonalData *> &);
 
 private:
     void initWidget();
 
+    //更新课程数据
+    void updateCourseData(QVector<IPersonalData *> vecData);
+
 private slots:
 
 private:
-    QTableWidget *m_pTableWidget_teachingPlan;     //教学计划
-    QTableWidget *m_pTableWidget_trainingProgram;  //培养方案
+    QTableWidget *m_pCourseTable;
+
 };
 
 #endif // TAKEDCOURSEWIDGET_H

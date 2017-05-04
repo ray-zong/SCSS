@@ -16,10 +16,9 @@ public:
     explicit SelectableCourseWidget(QWidget *parent = 0);
     ~SelectableCourseWidget();
 
-    //专业
-    void setCurrentSpecialty(int specialty);
-    //学期
-    void setCurrentTerm(int term);
+    //显示选课信息
+    bool displaySelectCourseInfo(int specialty, int term);
+
     //已修课程
     void setTakedCourseData(const QVector<IPersonalData* >&);
 
