@@ -18,14 +18,16 @@ public:
     //显示已修课程信息
     void displayTakedCourseInfo();
 
-    //设置课程数据//
-    void setData(const QVector<IPersonalData *> &);
+    //更新课程数据
+    void updateCourseData(QVector<IPersonalData *> vecData);
+
+
 
 private:
     void initWidget();
 
-    //更新课程数据
-    void updateCourseData(QVector<IPersonalData *> vecData);
+    //设置课程数据//
+    void setData(const QVector<IPersonalData *> &);
 
 private slots:
 

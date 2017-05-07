@@ -4,10 +4,14 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QPushButton>
+#include <QString>
+#include <QHeaderView>
+#include <QTableWidget>
 
 SelectedCourseResult::SelectedCourseResult(QWidget *parent)
     : QDialog(parent)
     , m_pLabel(NULL)
+    , m_pTableWidget(NULL)
 {
     initWidget();
 }
@@ -21,21 +25,57 @@ void SelectedCourseResult::displaySelectedCourse(const QVector<DB_SpecialtyCours
 {
     Q_ASSERT(m_pLabel);
 
-    QString strText = tr("Current Selected Course:") + "\n";
-    for(auto ite = vecCourse.begin(); ite != vecCourse.end(); ++ite)
+    m_pTableWidget->clearContents();
+    m_pTableWidget->setRowCount(0);
+
+    int row = 0;
+    for(auto ite = vecCourse.begin(); ite != vecCourse.end(); ++ite, ++row)
     {
-        strText += tr("Course ID:") + QString::number(ite->number) + "\t" +
-                tr("Course Name:") + ite->name + "\t" +
-                tr("Course Credit:") + QString::number(ite->credit) +
-                "\n";
+        m_pTableWidget->insertRow(row);
+        //课程号//
+        QTableWidgetItem *pItem = new QTableWidgetItem(QString::number(ite->number));
+        pItem->setTextAlignment(Qt::AlignCenter);
+        m_pTableWidget->setItem(row, 0, pItem);
+        //课程名//
+        pItem = new QTableWidgetItem(ite->name);
+        pItem->setTextAlignment(Qt::AlignCenter);
+        m_pTableWidget->setItem(row, 1, pItem);
+        //课程属性//
+        pItem = new QTableWidgetItem(ite->attribute);
+        pItem->setTextAlignment(Qt::AlignCenter);
+        m_pTableWidget->setItem(row, 2, pItem);
+        //学分//
+        pItem = new QTableWidgetItem(QString::number(ite->credit));
+        pItem->setTextAlignment(Qt::AlignCenter);
+        m_pTableWidget->setItem(row, 3, pItem);
     }
-    m_pLabel->setText(strText);
 }
 
 void SelectedCourseResult::initWidget()
 {
     m_pLabel = new QLabel(this);
-    m_pLabel->setText(tr("Current Selected Course:") + "\n");
+    m_pLabel->setText(tr("Current Selected Course") + ":" + "\n");
+
+    m_pTableWidget = new QTableWidget(this);
+    {
+        QHeaderView *pHeader = m_pTableWidget->horizontalHeader();
+        pHeader->setStretchLastSection(true);
+        pHeader->setSectionResizeMode(QHeaderView::Stretch);
+
+        //不可编辑//
+        m_pTableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
+
+        //课程号、课程名、课程属性、学分//
+        QStringList list;
+        list << tr("Course ID")
+             << tr("Course Name")
+             << tr("Course Attribute")
+             << tr("Course Credit");
+        //设置列数//
+        m_pTableWidget->setColumnCount(list.count());
+        m_pTableWidget->setHorizontalHeaderLabels(list);
+    }
+
     QVBoxLayout *pVLayout = new QVBoxLayout(this);
 
     QHBoxLayout *pHLayout = new QHBoxLayout;
@@ -47,6 +87,7 @@ void SelectedCourseResult::initWidget()
     pHLayout->addWidget(pPB);
 
     pVLayout->addWidget(m_pLabel);
+    pVLayout->addWidget(m_pTableWidget);
     pVLayout->addLayout(pHLayout);
 }
 

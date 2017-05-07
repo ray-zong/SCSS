@@ -26,9 +26,6 @@ public:
     //显示选课信息
     bool displaySelectCourseInfo(int specialty, int term);
 
-    //已修课程
-    void setTakedCourseData(const QVector<IPersonalData* >&);
-
 private:
     QTableWidget *createTableWidget();
     //打开数据库
@@ -48,7 +45,6 @@ private:
     QPushButton *m_pPushButton;
     QTabWidget *m_pTabWidget;
     SelectedCourseResult *m_pSelectedCourseResult;
-    QVector<IPersonalData *> m_vecPersonalData;
 
     int m_nSpecialty;
     int m_nTerm;

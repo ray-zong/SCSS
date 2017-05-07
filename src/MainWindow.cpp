@@ -58,20 +58,20 @@ void MainWindow::createMenu()
     {
         //打开
         QMenu *pOpen = pFile->addMenu(tr("Open"));
-        //教学计划
-        QAction *pTeachingPlan = pOpen->addAction(tr("Teaching Plan"));
-        connect(pTeachingPlan, &QAction::triggered, this, &MainWindow::openTeachingPlan);
         //培养方案
         QAction *pTrainingProgram = pOpen->addAction(tr("Training Program"));
         connect(pTrainingProgram, &QAction::triggered, this, &MainWindow::openTrainingProgram);
+        //教学计划
+        QAction *pTeachingPlan = pOpen->addAction(tr("Teaching Plan"));
+        connect(pTeachingPlan, &QAction::triggered, this, &MainWindow::openTeachingPlan);
     }
 
     //工具
-    QMenu *pTool = menuBar()->addMenu(tr("&Tool"));
+    //QMenu *pTool = menuBar()->addMenu(tr("&Tool"));
     {
         //选项
-        QAction *pOption = pTool->addAction(tr("Option") + "...");
-        connect(pOption, &QAction::triggered, this, &MainWindow::openOptionDialog);
+        //QAction *pOption = pTool->addAction(tr("Option") + "...");
+        //connect(pOption, &QAction::triggered, this, &MainWindow::openOptionDialog);
     }
     //帮助
     QMenu *pHelp = menuBar()->addMenu(tr("&Help"));
@@ -139,7 +139,8 @@ void MainWindow::openTeachingPlan()
 
     Q_ASSERT(m_pTakedCourseWidget);
     QVector<IPersonalData* > vecTeachingPlan = pFileAnalysis->getData();
-    m_pTakedCourseWidget->setData(vecTeachingPlan);
+    m_pTakedCourseWidget->updateCourseData(vecTeachingPlan);
+    m_pTakedCourseWidget->displayTakedCourseInfo();
 }
 
 void MainWindow::openTrainingProgram()
@@ -159,9 +160,8 @@ void MainWindow::openTrainingProgram()
 
     Q_ASSERT(m_pTakedCourseWidget);
     QVector<IPersonalData* > vecTeachingPlan = pFileAnalysis->getData();
-    m_pTakedCourseWidget->setData(vecTeachingPlan);
-    //TODO:暂时将培养方案中的已修课程保存在可选列表中
-    m_pSelectableCourseWidget->setTakedCourseData(vecTeachingPlan);
+    m_pTakedCourseWidget->updateCourseData(vecTeachingPlan);
+    m_pTakedCourseWidget->displayTakedCourseInfo();
 }
 
 void MainWindow::changeLanguage()

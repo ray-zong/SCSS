@@ -86,6 +86,7 @@ void TakedCourseWidget::setData(const QVector<IPersonalData *> &vecData)
     QTextCodec *codec = QTextCodec::codecForName("GBK");
 
 
+    m_pCourseTable->clearContents();
     m_pCourseTable->setRowCount(0);
 
     QTableWidgetItem *pItem = NULL;
@@ -123,8 +124,6 @@ void TakedCourseWidget::setData(const QVector<IPersonalData *> &vecData)
 
         ++i;
     }
-
-    updateCourseData(vecData);
 }
 
 void TakedCourseWidget::updateCourseData(QVector<IPersonalData *> vecData)

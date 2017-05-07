@@ -7,10 +7,13 @@
 
 
 class QLabel;
+class QTableWidget;
 
 
 class SelectedCourseResult : public QDialog
 {
+    Q_OBJECT
+
 public:
     SelectedCourseResult(QWidget* parent = nullptr);
     ~SelectedCourseResult();
@@ -22,6 +25,8 @@ private:
 
 private:
     QLabel *m_pLabel;
+
+    QTableWidget *m_pTableWidget;
 }; 
 
 #endif //SELECTEDCOURSERESULT_H

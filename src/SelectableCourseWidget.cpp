@@ -62,7 +62,7 @@ QTableWidget * SelectableCourseWidget::createTableWidget()
         pHeader->setSectionResizeMode(QHeaderView::Stretch);
 
         //不可编辑//
-        //pTableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
+        pTableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
         //课程号、课程名、课程属性、学分、建议学期、选课//
         QStringList list;
@@ -178,6 +178,7 @@ void SelectableCourseWidget::checkboxClicked()
         DB_SpecialtyCourse specialtyCourse;
         specialtyCourse.number = pTableWidget->item(data.z(), 0)->text().toInt();
         specialtyCourse.name = pTableWidget->item(data.z(), 1)->text();
+        specialtyCourse.attribute = pTableWidget->item(data.z(), 2)->text();
         specialtyCourse.credit = pTableWidget->item(data.z(), 3)->text().toInt();
 
         m_mapGroupToSpecialtyCourse[data.y()].push_back(specialtyCourse);
@@ -189,6 +190,7 @@ void SelectableCourseWidget::checkboxClicked()
                 m_mapGroupToSpecialtyCourse.end())
         {
             qDebug() << __FILE__ << __LINE__ << "error";
+            return;
         }
 
         for(auto ite = m_mapGroupToSpecialtyCourse[data.y()].begin();
@@ -200,6 +202,7 @@ void SelectableCourseWidget::checkboxClicked()
                     && ite->credit == pTableWidget->item(data.z(), 3)->text().toInt())
             {
                 m_mapGroupToSpecialtyCourse[data.y()].erase(ite);
+                break;
             }
         }
     }
@@ -367,6 +370,14 @@ bool SelectableCourseWidget::displaySelectCourseInfo(int specialty, int term)
                 qDebug() << __FILE__ << __LINE__ << "CreditGroup" << i.key() << "credit has required!";
             }
         }
+        else
+        {
+            //未修该课组
+            strText += tr("CreditGroup:") + QString("%1").arg(i.key()) + "\t" + tr("Required credits:") + QString("%1").arg(i.value().requiredCredit)
+                    + "\t" + tr("Completed credits:") +"0" + "\t" + tr("Remain credits:") + QString("%1").arg(i.value().requiredCredit) + "\n";
+            //在标签页中添加选课数据
+            setSelectableCourseByGroup(i.key(), m_mapGroupToSelectableCourse[i.key()]);
+        }
     }
     m_pLabel_advise->setText(strText);
 
@@ -374,11 +385,6 @@ bool SelectableCourseWidget::displaySelectCourseInfo(int specialty, int term)
     ConnectionPool::closeConnection(db);
 
     return true;
-}
-
-void SelectableCourseWidget::setTakedCourseData(const QVector<IPersonalData *> &vecPersonalData)
-{
-    m_vecPersonalData = vecPersonalData;
 }
 
 bool SelectableCourseWidget::createConnection(QSqlDatabase &db)
