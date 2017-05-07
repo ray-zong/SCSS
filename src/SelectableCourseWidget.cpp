@@ -10,31 +10,47 @@
 #include <QDebug>
 #include <QMessageBox>
 #include <QMap>
+#include <QCheckBox>
+#include <QPushButton>
+#include <QTabWidget>
+#include <QVector3D>
+#include <QMessageBox>
 
 #include "ConnectionPool.h"
 #include "DataTypeDefine.h"
 #include "SelectCourseDelegate.h"
+#include "SelectedCourseResult.h"
 
 SelectableCourseWidget::SelectableCourseWidget(QWidget *parent)
     : QWidget(parent)
     , m_pLabel_advise(NULL)
-    , m_pTableWidget(NULL)
+    , m_pPushButton(NULL)
+    , m_pTabWidget(NULL)
+    , m_pSelectedCourseResult(NULL)
     , m_nSpecialty(0)
     , m_nTerm(0)
 {
     m_pLabel_advise = new QLabel(this);
-    m_pLabel_advise->setText(tr("Advise") + ":" + "\n");
-    m_pTableWidget = createTableWidget();
-    m_pTableWidget->setItemDelegateForColumn(5, new SelectCourseDelegate);
+
+    m_pTabWidget = new QTabWidget(this);
+    m_pTabWidget->setTabPosition(QTabWidget::South);
 
     QVBoxLayout *pVLayout = new QVBoxLayout(this);
     pVLayout->addWidget(m_pLabel_advise);
-    pVLayout->addWidget(m_pTableWidget);
+    pVLayout->addWidget(m_pTabWidget);
+
+    QHBoxLayout *pHLayout = new QHBoxLayout;
+    m_pPushButton = new QPushButton(this);
+    connect(m_pPushButton, &QPushButton::clicked, this, &SelectableCourseWidget::checkSelectedCourse);
+    m_pPushButton->setText(tr("Check"));
+    pHLayout->addStretch();
+    pHLayout->addWidget(m_pPushButton);
+
+    pVLayout->addLayout(pHLayout);
 }
 
 SelectableCourseWidget::~SelectableCourseWidget()
 {
-
 }
 
 QTableWidget * SelectableCourseWidget::createTableWidget()
@@ -48,13 +64,13 @@ QTableWidget * SelectableCourseWidget::createTableWidget()
         //不可编辑//
         //pTableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
-        //课程号、课程名、课程属性、学分、学期//
+        //课程号、课程名、课程属性、学分、建议学期、选课//
         QStringList list;
         list << tr("Course ID")
              << tr("Course Name")
              << tr("Course Attribute")
              << tr("Course Credit")
-             << tr("Term")
+             << tr("Advise Term")
              << tr("Select");
         //设置列数//
         pTableWidget->setColumnCount(list.count());
@@ -63,141 +79,166 @@ QTableWidget * SelectableCourseWidget::createTableWidget()
     return pTableWidget;
 }
 
-bool SelectableCourseWidget::selectCourseAnalysis()
+QWidget *SelectableCourseWidget::addCheckWidget(int index, int group, int row)
 {
-    Q_ASSERT(m_pTableWidget != NULL);
-    //连接数据库
-    QSqlDatabase db;
-    if(!createConnection(db))
+    QWidget *pWidget = new QWidget();
+    QCheckBox *pCheckBox = new QCheckBox();
+    m_mapCheckboxToGroupRow[pCheckBox] = QVector3D(index, group, row);
+    connect(pCheckBox, SIGNAL(clicked()), this, SLOT(checkboxClicked()));
+
+    QHBoxLayout *pLayout = new QHBoxLayout(pWidget);
+    pLayout->addWidget(pCheckBox);
+    pLayout->setAlignment(Qt::AlignCenter);
+    pLayout->setContentsMargins(0,0,0,0);
+    pWidget->setLayout(pLayout);
+    return pWidget;
+}
+
+void SelectableCourseWidget::setSelectableCourseByGroup(int group, const QVector<DB_SpecialtyCourse> &vecSpecialtyCourse)
+{
+    Q_ASSERT(m_pTabWidget);
+
+    QTableWidget *pTableWidget = createTableWidget();
+    int tabIndex = m_pTabWidget->addTab(pTableWidget, QString("%1").arg(group));
+
+    int row = 0;
+    auto ite = vecSpecialtyCourse.begin();
+    for(; ite != vecSpecialtyCourse.end(); ++ite, ++row)
     {
-        qDebug() << __FILE__ << __LINE__ << "error: cannot open the database";
-        return false;
-    }
-
-    QTableWidgetItem *pItem = NULL;
-    //1.依据专业查找所有课程
-    QMap<int, QVector<DB_SpecialtyCourse> > mapToVecSpecialtyCourse;
-    QSqlQuery query(QString("SELECT "
-                                "Number,Attribute,Credit,Term,CreditGroup "
-                            "FROM "
-                                "specialty_course "
-                            "WHERE "
-                                "Specialty=%1").arg(m_nSpecialty), db);
-    int i = 0;
-    m_pTableWidget->setRowCount(0);
-    m_pTableWidget->clearContents();
-    for(; query.next(); ++i)
-    {
-        DB_SpecialtyCourse specialtyCourse;
-        specialtyCourse.number = query.value(0).toInt();
-        specialtyCourse.attribute = query.value(1).toInt();
-        specialtyCourse.credit = query.value(2).toInt();
-        specialtyCourse.term = query.value(3).toString();
-        specialtyCourse.creditGroup = query.value(4).toInt();
-        specialtyCourse.specialty = m_nSpecialty;
-
-        m_pTableWidget->insertRow(i);
-        QStringList items;
-        //课程号
-        items << query.value(0).toString();
-        //课程名
-        QSqlQuery queryName(QString("SELECT Name,\"Group\" FROM course_info WHERE Number=%1").arg(query.value(0).toInt()), db);
-        if(queryName.next())
-        {
-            items << queryName.value(0).toString();
-        }
-        else
-        {
-            qDebug() << __FILE__ << __LINE__ << "Course number:" << query.value(0);
-            items << "";
-        }
-        //课程属性
-        QSqlQuery queryAttribute(QString("SELECT Attribute FROM course_attribute WHERE ID=%1").arg(query.value(1).toInt()), db);
-        if(queryAttribute.next())
-        {
-            items << queryAttribute.value(0).toString();
-        }
-        else
-        {
-            qDebug() << __FILE__ << __LINE__ << "Course Attribute error:" << query.value(1);
-        }
-        //学分
-        items << query.value(2).toString();
-        //学期
-        items << query.value(3).toString();
-
-        for(int j = 0; j < items.size(); ++j)
-        {
-            //课程号、课程名、课程属性、学分、学期//
-            pItem = new QTableWidgetItem(items.at(j));
-            pItem->setTextAlignment(Qt::AlignCenter);
-            m_pTableWidget->setItem(i, j, pItem);
-        }
-        //选课
-        pItem = new QTableWidgetItem();
+        pTableWidget->insertRow(row);
+        //课程号//
+        QTableWidgetItem *pItem = new QTableWidgetItem(QString::number(ite->number));
         pItem->setTextAlignment(Qt::AlignCenter);
-        m_pTableWidget->setItem(i, 5, pItem);
-        m_pTableWidget->openPersistentEditor(pItem);
+        pTableWidget->setItem(row, 0, pItem);
+        //课程名//
+        pItem = new QTableWidgetItem(ite->name);
+        pItem->setTextAlignment(Qt::AlignCenter);
+        pTableWidget->setItem(row, 1, pItem);
+        //课程属性//
+        pItem = new QTableWidgetItem(ite->attribute);
+        pItem->setTextAlignment(Qt::AlignCenter);
+        pTableWidget->setItem(row, 2, pItem);
+        //学分//
+        pItem = new QTableWidgetItem(QString::number(ite->credit));
+        pItem->setTextAlignment(Qt::AlignCenter);
+        pTableWidget->setItem(row, 3, pItem);
+        //学期//
+        pItem = new QTableWidgetItem(ite->term);
+        pItem->setTextAlignment(Qt::AlignCenter);
+        pTableWidget->setItem(row, 4, pItem);
+        //选课
+        QWidget *pWidget = addCheckWidget(tabIndex, group, row);
+        pTableWidget->setCellWidget(row, 5, pWidget);
+    }
+}
 
+void SelectableCourseWidget::checkboxClicked()
+{
+    QCheckBox* pCheckBox = qobject_cast<QCheckBox *>(QObject::sender());
 
-        //first
-        if(mapToVecSpecialtyCourse.find(specialtyCourse.creditGroup) == mapToVecSpecialtyCourse.end())
+    bool isChecked = pCheckBox->isChecked();
+
+    if(m_mapCheckboxToGroupRow.find(pCheckBox) == m_mapCheckboxToGroupRow.end())
+    {
+        qDebug() << __FILE__ << __LINE__ << "error";
+        return;
+    }
+
+    QVector3D data = m_mapCheckboxToGroupRow[pCheckBox];
+    //获取标签
+    QTableWidget *pTableWidget = dynamic_cast<QTableWidget*>(m_pTabWidget->widget(data.x()));
+    if(pTableWidget == NULL)
+    {
+        qDebug() << __FILE__ << __LINE__ << "error";
+        return;
+    }
+
+    //设置选中行的颜色//
+    {
+        for(int i = 0; i < pTableWidget->columnCount() - 1; ++i)
         {
-            mapToVecSpecialtyCourse[specialtyCourse.creditGroup] = QVector<DB_SpecialtyCourse>();
+            QTableWidgetItem *pItem = pTableWidget->item(data.z(), i);
+            if(pItem != NULL)
+            {
+                pItem->setBackgroundColor(isChecked ? QColor(255, 200, 200) : QColor(255, 255, 255));
+            }
+        }
+    }
+
+
+    if(isChecked)
+    {
+        //加入已选课组//
+        if(m_mapGroupToSpecialtyCourse.find(data.y()) ==
+                m_mapGroupToSpecialtyCourse.end())
+        {
+            m_mapGroupToSpecialtyCourse[data.y()] = QVector<DB_SpecialtyCourse>();
         }
 
-        mapToVecSpecialtyCourse[specialtyCourse.creditGroup].push_back(specialtyCourse);
-    }
+        DB_SpecialtyCourse specialtyCourse;
+        specialtyCourse.number = pTableWidget->item(data.z(), 0)->text().toInt();
+        specialtyCourse.name = pTableWidget->item(data.z(), 1)->text();
+        specialtyCourse.credit = pTableWidget->item(data.z(), 3)->text().toInt();
 
-    if(i == 0)
-    {
-        return false;
+        m_mapGroupToSpecialtyCourse[data.y()].push_back(specialtyCourse);
     }
-
-    QMap<int, DB_SpecialtyCreditGroup> mapCreditGroup;
-    //2.查找不同的学分分组应修学分,应修门数
-    query.prepare(QString("SELECT Group,Required_credit,Required_number FROM specialty_creditGroup WHERE Specialty=%1").arg(m_nSpecialty));
-    while(query.next())
+    else
     {
-        DB_SpecialtyCreditGroup creditGroup;
-        creditGroup.group = query.value(0).toInt();
-        creditGroup.requiredCredit = query.value(1).toInt();
-        creditGroup.requiredNumber = query.value(2).toInt();
-        creditGroup.specialty = m_nSpecialty;
-        mapCreditGroup[creditGroup.group] = creditGroup;
-    }
-
-    //3.依据选课分组排列所有课程
-    QString text = m_pLabel_advise->text();
-    for(int i = 1; i < 9; ++i)
-    {
-        auto ite = mapCreditGroup.find(i);
-        if(ite != mapCreditGroup.end())
+        //删除
+        if(m_mapGroupToSpecialtyCourse.find(data.y()) ==
+                m_mapGroupToSpecialtyCourse.end())
         {
-            //QVector<DB_SpecialtyCourse> &vecSpecialtyCourse = mapToVecSpecialtyCourse[ite.value()];
-            //int creditResult = 0;
-            //for(auto vecIte = vecSpecialtyCourse.begin(); vecIte != vecSpecialtyCourse.end(); ++vecIte)
-            //{
-            //    creditResult += vecIte->credit;
-            //    if(creditResult >= ite.value().requiredCredit)
-            //    {
-            //        //已修够学分
-            //        break;
-            //    }
-            //}
+            qDebug() << __FILE__ << __LINE__ << "error";
+        }
+
+        for(auto ite = m_mapGroupToSpecialtyCourse[data.y()].begin();
+            ite != m_mapGroupToSpecialtyCourse[data.y()].end();
+            ++ite)
+        {
+            if(ite->number == pTableWidget->item(data.z(), 0)->text().toInt()
+                    && ite->name == pTableWidget->item(data.z(), 1)->text()
+                    && ite->credit == pTableWidget->item(data.z(), 3)->text().toInt())
+            {
+                m_mapGroupToSpecialtyCourse[data.y()].erase(ite);
+            }
         }
     }
+}
 
-    //连接使用完后需要释放回数据库连接池
-    ConnectionPool::closeConnection(db);
+void SelectableCourseWidget::checkSelectedCourse()
+{
+    if(m_pSelectedCourseResult == NULL)
+    {
+        m_pSelectedCourseResult = new SelectedCourseResult(this);
+    }
 
-    return true;
+    QVector<DB_SpecialtyCourse> vecCourse;
+    for(auto i = m_mapGroupToSpecialtyCourse.begin(); i != m_mapGroupToSpecialtyCourse.end(); ++i)
+    {
+        vecCourse.append(i.value());
+    }
+
+    if(vecCourse.isEmpty())
+    {
+        QMessageBox msgBox;
+        msgBox.setText(tr("Nothing"));
+        msgBox.exec();
+        return;
+    }
+    m_pSelectedCourseResult->displaySelectedCourse(vecCourse);
+    m_pSelectedCourseResult->show();
 }
 
 bool SelectableCourseWidget::displaySelectCourseInfo(int specialty, int term)
 {
     m_nSpecialty = specialty;
     m_nTerm = term;
+    m_mapGroupToTakedCourse.clear();
+    m_mapCheckboxToGroupRow.clear();
+    m_mapGroupToSpecialtyCourse.clear();
+    m_mapGroupToSelectableCourse.clear();
+    m_mapGroupTospecialtyCreditGroup.clear();
+
 
     QSqlDatabase db;
     if(!createConnection(db))
@@ -206,59 +247,128 @@ bool SelectableCourseWidget::displaySelectCourseInfo(int specialty, int term)
         return false;
     }
 
-    //课程号、课程名、课程属性、学分、学期
-    //1.根据专业选择所有课程
-    QSqlQuery query(QString("SELECT DISTINCT "
-                    "specialty_course.Number,"
-                    "course_info.Name,"
-                    "course_attribute.Attribute,"
-                    "specialty_course.Credit,"
-                    "specialty_course.Term "
-                "FROM "
-                    "specialty_course,"
-                    "course_info,"
-                    "course_attribute "
-                "WHERE "
-                    "specialty_course.Specialty = %1 "
-                "AND "
-                  "course_attribute.ID = specialty_course.Attribute "
-                "AND "
-                    "specialty_course.Number = course_info.Number").arg(specialty), db);
-    //2.根据已修课程移除课程
-    //3.根据学期移除课程
+    //课程号、学分、学分分组
+    //1.根据专业选择所有课程(已修)
+    QSqlQuery takedCourseQuery(QString("SELECT DISTINCT "
+                                       "student_course.Course_Number,"
+                                       "specialty_course.Credit,"
+                                       "specialty_course.CreditGroup "
+                                       "FROM "
+                                       "student_course,"
+                                       "specialty_course "
+                                       "WHERE "
+                                       "student_course.Course_Number = specialty_course.Number "
+                                       "AND "
+                                       "specialty_course.Specialty = %1").arg(specialty), db);
+    while(takedCourseQuery.next())
+    {
+        DB_SpecialtyCourse specialtyCourse;
+        specialtyCourse.number = takedCourseQuery.value(0).toInt();
+        specialtyCourse.credit = takedCourseQuery.value(1).toInt();
+        specialtyCourse.creditGroup = takedCourseQuery.value(2).toInt();
 
-    QTableWidgetItem *pItem = NULL;
-    m_pTableWidget->setRowCount(0);
-    m_pTableWidget->clearContents();
-    int i = 0;
+        if(m_mapGroupToTakedCourse.find(specialtyCourse.creditGroup) ==
+                m_mapGroupToTakedCourse.end())
+        {
+            m_mapGroupToTakedCourse[specialtyCourse.creditGroup] = QVector<DB_SpecialtyCourse>();
+        }
+
+        m_mapGroupToTakedCourse[specialtyCourse.creditGroup].push_back(specialtyCourse);
+    }
+
+    //2.根据专业选择所有课程(未修)
+    QSqlQuery query(QString("SELECT DISTINCT "
+                            "specialty_course.Number,"
+                            "course_info.Name,"
+                            "course_attribute.Attribute,"
+                            "specialty_course.Credit,"
+                            "specialty_course.Term,"
+                            "specialty_course.CreditGroup "
+                            "FROM "
+                            "specialty_course,"
+                            "course_info,"
+                            "course_attribute "
+                            "WHERE "
+                            "specialty_course.Specialty = %1 "
+                            "AND "
+                            "course_attribute.ID = specialty_course.Attribute "
+                            "AND "
+                            "specialty_course.Number = course_info.Number "
+                            "AND (specialty_course.Number NOT IN "
+                            "(SELECT "
+                            "student_course.Course_Number "
+                            "FROM "
+                            "student_course))").arg(specialty), db);
+
     while(query.next())
     {
-        m_pTableWidget->insertRow(i);
-        //课程号//
-        //课程名//
-        //课程属性//
-        //学分//
-        //学期//
-        for(int j = 0; j < 5; ++j)
+        DB_SpecialtyCourse specialtyCourse;
+        specialtyCourse.number = query.value(0).toInt();
+        specialtyCourse.name = query.value(1).toString();
+        specialtyCourse.attribute = query.value(2).toString();
+        specialtyCourse.credit = query.value(3).toInt();
+        specialtyCourse.term = query.value(4).toString();
+        specialtyCourse.creditGroup = query.value(5).toInt();
+        if(m_mapGroupToSelectableCourse.find(specialtyCourse.creditGroup) ==
+                m_mapGroupToSelectableCourse.end())
         {
-            pItem = new QTableWidgetItem(query.value(j).toString());
-            pItem->setTextAlignment(Qt::AlignCenter);
-            m_pTableWidget->setItem(i, j, pItem);
+            m_mapGroupToSelectableCourse[specialtyCourse.creditGroup] = QVector<DB_SpecialtyCourse>();
         }
-        //选课
-        pItem = new QTableWidgetItem();
-        pItem->setTextAlignment(Qt::AlignCenter);
-        m_pTableWidget->setItem(i, 5, pItem);
-        m_pTableWidget->openPersistentEditor(pItem);
 
-        ++i;
+        m_mapGroupToSelectableCourse[specialtyCourse.creditGroup].push_back(specialtyCourse);
     }
 
-    if(i == 0)
+    //查询课组学分要求//
+    QSqlQuery queryGroup(QString("SELECT DISTINCT "
+                                 "\"Group\", Required_credit, Required_number "
+                                 "FROM "
+                                 "specialty_creditGroup "
+                                 "WHERE "
+                                 "specialty=%1").arg(specialty), db);
+
+    while(queryGroup.next())
     {
-        qDebug() << __FILE__ << __LINE__ << "error";
-        return false;
+        DB_SpecialtyCreditGroup specialtyCreditGroup;
+        specialtyCreditGroup.group = queryGroup.value(0).toInt();
+        specialtyCreditGroup.requiredCredit = queryGroup.value(1).toInt();
+        specialtyCreditGroup.requiredNumber = queryGroup.value(2).toInt();
+        specialtyCreditGroup.specialty = specialty;
+
+        m_mapGroupTospecialtyCreditGroup[specialtyCreditGroup.group] = specialtyCreditGroup;
     }
+
+    m_pTabWidget->clear();
+    //必修课学分不做判读直接加入表中
+    setSelectableCourseByGroup(0, m_mapGroupToSelectableCourse[0]);
+    //根据每个选课分组，查询已修的学分是否满足要求，若满足提示通过，若不满足，提示还需多少学分
+    QString strText = tr("Advise") + ":" + "\n";
+    for(auto i = m_mapGroupTospecialtyCreditGroup.begin();
+        i != m_mapGroupTospecialtyCreditGroup.end();
+        ++i)
+    {
+        if(!m_mapGroupToTakedCourse[i.key()].isEmpty())
+        {
+            int sum = 0;
+            for(auto j = m_mapGroupToTakedCourse[i.key()].begin(); j != m_mapGroupToTakedCourse[i.key()].end(); ++j)
+            {
+                sum += (*j).credit;
+            }
+
+            //学分不够
+            if(sum < i.value().requiredCredit)
+            {
+                strText += tr("CreditGroup:") + QString("%1").arg(i.key()) + "\t" + tr("Required credits:") + QString("%1").arg(i.value().requiredCredit)
+                        + "\t" + tr("Completed credits:") + QString("%1").arg(sum) + "\t" + tr("Remain credits:") + QString("%1").arg(i.value().requiredCredit - sum) + "\n";
+                //在标签页中添加选课数据
+                setSelectableCourseByGroup(i.key(), m_mapGroupToSelectableCourse[i.key()]);
+            }
+            else
+            {
+                qDebug() << __FILE__ << __LINE__ << "CreditGroup" << i.key() << "credit has required!";
+            }
+        }
+    }
+    m_pLabel_advise->setText(strText);
 
     //连接使用完后需要释放回数据库连接池
     ConnectionPool::closeConnection(db);
@@ -268,7 +378,7 @@ bool SelectableCourseWidget::displaySelectCourseInfo(int specialty, int term)
 
 void SelectableCourseWidget::setTakedCourseData(const QVector<IPersonalData *> &vecPersonalData)
 {
-   m_vecPersonalData = vecPersonalData;
+    m_vecPersonalData = vecPersonalData;
 }
 
 bool SelectableCourseWidget::createConnection(QSqlDatabase &db)

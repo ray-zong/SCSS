@@ -43,15 +43,19 @@ void ChooseWidget::initWidget()
     connect(m_pSpecialtyComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(emitCurrentSpecialtyOrTermChanged(int)));
 
     QLabel *pLabel_term = new QLabel(this);
+    pLabel_term->hide();
     pLabel_term->setText(tr("Term") + ":");
     m_pTermComboBox = new QComboBox(this);
     connect(m_pTermComboBox, SIGNAL(currentIndexChanged(int)), this, SLOT(emitCurrentSpecialtyOrTermChanged(int)));
+    m_pTermComboBox->hide();
 
-    QGridLayout *pGridLayout = new QGridLayout(this);
-    pGridLayout->addWidget(pLabel_specialty, 0, 0);
-    pGridLayout->addWidget(m_pSpecialtyComboBox, 0, 1);
-    pGridLayout->addWidget(pLabel_term, 0, 2);
-    pGridLayout->addWidget(m_pTermComboBox, 0, 3);
+    QHBoxLayout *pHLayout = new QHBoxLayout(this);
+    pHLayout->addStretch();
+    pHLayout->addWidget(pLabel_specialty);
+    pHLayout->addWidget(m_pSpecialtyComboBox);
+    pHLayout->addStretch();
+    //pGridLayout->addWidget(pLabel_term, 0, 2);
+    //pGridLayout->addWidget(m_pTermComboBox, 0, 3);
 }
 
 void ChooseWidget::querySpecialty()

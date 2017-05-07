@@ -21,6 +21,9 @@ QSize SelectCourseDelegate::sizeHint(const QStyleOptionViewItem &option, const Q
 
 QWidget *SelectCourseDelegate::createEditor(QWidget *parent, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
+    Q_UNUSED(option);
+    Q_UNUSED(index);
+
     QCheckBox *editor = new QCheckBox(parent);
     connect(editor, &QCheckBox::stateChanged,
             this, &SelectCourseDelegate::checkBoxStateChanged);

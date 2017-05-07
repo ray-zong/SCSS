@@ -116,7 +116,8 @@ class DB_SpecialtyCourse
 {
 public:
     int number;     //课程号
-    int attribute;  //课程属性
+    QString name;   //课程名
+    QString attribute;  //课程属性
     int specialty;  //所属专业
     int credit;     //学分
     int creditGroup;//选课分组
@@ -127,7 +128,6 @@ public:
 class DB_SpecialtyCreditGroup
 {
 public:
-    int id;             //序列号
     int specialty;      //专业
     int group;          //学分组
     int requiredCredit; //应修学分

@@ -196,9 +196,6 @@ void TakedCourseWidget::initWidget()
         //设置列数//
         m_pCourseTable->setColumnCount(list.count());
         m_pCourseTable->setHorizontalHeaderLabels(list);
-
-        //设置行数//
-        //m_pTableWidget->setRowCount();
     }
 
     QVBoxLayout *pVLayout = new QVBoxLayout(this);

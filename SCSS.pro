@@ -39,7 +39,8 @@ SOURCES += src/main.cpp\
     src/ConnectionPool.cpp \
     src/AboutSoftware.cpp \
     src/SelectCourseDelegate.cpp \
-    src/DatabaseQuery.cpp
+    src/DatabaseQuery.cpp \
+    src/SelectedCourseResult.cpp
 
 HEADERS  += include/MainWindow.h \
     include/OptionTreeWidget.h \
@@ -54,7 +55,8 @@ HEADERS  += include/MainWindow.h \
     include/ConnectionPool.h \
     include/AboutSoftware.h \
     include/SelectCourseDelegate.h \
-    include/DatabaseQuery.h
+    include/DatabaseQuery.h \
+    include/SelectedCourseResult.h
 
 FORMS    += ui/MainWindow.ui
 

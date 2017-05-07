@@ -26,12 +26,6 @@ void RetakeCourseWidget::createTableWidget()
         pHeader->setStretchLastSection(true);
         pHeader->setSectionResizeMode(QHeaderView::Stretch);
 
-        //排序
-        //pHeader->setSortIndicator(0, Qt::AscendingOrder);
-        //pHeader->setSortIndicatorShown(true);
-        //connect(pHeader, SIGNAL(sectionClicked(int)), pTableWidget, SLOT(sortByColumn(int)));
-
-
         //不可编辑//
         m_pTableWidget->setEditTriggers(QAbstractItemView::NoEditTriggers);
 
@@ -47,8 +41,5 @@ void RetakeCourseWidget::createTableWidget()
         //设置列数//
         m_pTableWidget->setColumnCount(list.count());
         m_pTableWidget->setHorizontalHeaderLabels(list);
-
-        //设置行数//
-        //m_pTableWidget->setRowCount();
     }
 }
