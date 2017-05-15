@@ -34,6 +34,12 @@ private:
     QWidget *addCheckWidget(int, int, int);
     //为课组设置课程内容
     void setSelectableCourseByGroup(int group, const QVector<DB_SpecialtyCourse> &vecSpecialtyCourse);
+    //提示信息
+    void displayNotSelecteCourseMsg(const QString &strMsg);
+    //通过课程号查找课程名
+    QString queryNameByNumber(int number);
+    //通过课程号查询课程是否已修
+    bool queryTakedCourseByNumber(int number);
 
 private slots:
     void checkboxClicked();

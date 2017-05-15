@@ -41,24 +41,22 @@
         <translation>打开</translation>
     </message>
     <message>
-        <location filename="../../src/MainWindow.cpp" line="62"/>
+        <location filename="../../src/MainWindow.cpp" line="65"/>
         <source>Teaching Plan</source>
         <translation>教学计划</translation>
     </message>
     <message>
-        <location filename="../../src/MainWindow.cpp" line="65"/>
+        <location filename="../../src/MainWindow.cpp" line="62"/>
         <source>Training Program</source>
         <translation>培训方案</translation>
     </message>
     <message>
-        <location filename="../../src/MainWindow.cpp" line="70"/>
         <source>&amp;Tool</source>
-        <translation>工具(&amp;T)</translation>
+        <translation type="vanished">工具(&amp;T)</translation>
     </message>
     <message>
-        <location filename="../../src/MainWindow.cpp" line="73"/>
         <source>Option</source>
-        <translation>选项</translation>
+        <translation type="vanished">选项</translation>
     </message>
     <message>
         <location filename="../../src/MainWindow.cpp" line="77"/>
@@ -102,7 +100,7 @@ Rightcopy:Tsinghua University</source>
         <translation>打开教学计划</translation>
     </message>
     <message>
-        <location filename="../../src/MainWindow.cpp" line="148"/>
+        <location filename="../../src/MainWindow.cpp" line="149"/>
         <source>Open Training Program</source>
         <translation>打开培训方案</translation>
     </message>
@@ -112,7 +110,7 @@ Rightcopy:Tsinghua University</source>
     </message>
     <message>
         <location filename="../../src/MainWindow.cpp" line="128"/>
-        <location filename="../../src/MainWindow.cpp" line="148"/>
+        <location filename="../../src/MainWindow.cpp" line="149"/>
         <source>Files (*.txt)</source>
         <translation>文件(*.txt)</translation>
     </message>
@@ -169,14 +167,14 @@ Rightcopy:Tsinghua University</source>
         <translation type="vanished">周日</translation>
     </message>
     <message>
-        <location filename="../../src/ChooseWidget.cpp" line="101"/>
-        <location filename="../../src/SelectableCourseWidget.cpp" line="402"/>
+        <location filename="../../src/ChooseWidget.cpp" line="102"/>
+        <location filename="../../src/SelectableCourseWidget.cpp" line="566"/>
         <source>Cannot open database</source>
         <translation>无法打开数据库</translation>
     </message>
     <message>
-        <location filename="../../src/ChooseWidget.cpp" line="102"/>
-        <location filename="../../src/SelectableCourseWidget.cpp" line="403"/>
+        <location filename="../../src/ChooseWidget.cpp" line="103"/>
+        <location filename="../../src/SelectableCourseWidget.cpp" line="567"/>
         <source>Unable to establish a database connecttion.
 This example needs SQLite support. Please readthe Qt SQL driver documentation for information howto build it.
 
@@ -266,7 +264,7 @@ Click Cancel to exit.</source>
 <context>
     <name>SelectableCourseWidget</name>
     <message>
-        <location filename="../../src/SelectableCourseWidget.cpp" line="347"/>
+        <location filename="../../src/SelectableCourseWidget.cpp" line="516"/>
         <source>Advise</source>
         <translation>建议</translation>
     </message>
@@ -329,31 +327,46 @@ Click Cancel to exit.</source>
         <translation>选课</translation>
     </message>
     <message>
-        <location filename="../../src/SelectableCourseWidget.cpp" line="227"/>
+        <location filename="../../src/SelectableCourseWidget.cpp" line="251"/>
+        <source>You first need to finish the Course</source>
+        <translation>你首先需要完成下列课程</translation>
+    </message>
+    <message>
+        <location filename="../../src/SelectableCourseWidget.cpp" line="259"/>
+        <source>Or</source>
+        <translation>或者</translation>
+    </message>
+    <message>
+        <location filename="../../src/SelectableCourseWidget.cpp" line="282"/>
+        <source>You can not selecte the course</source>
+        <translation>本学期这门课不开课</translation>
+    </message>
+    <message>
+        <location filename="../../src/SelectableCourseWidget.cpp" line="392"/>
         <source>Nothing</source>
         <translation>你未选择课程</translation>
     </message>
     <message>
-        <location filename="../../src/SelectableCourseWidget.cpp" line="363"/>
-        <location filename="../../src/SelectableCourseWidget.cpp" line="376"/>
+        <location filename="../../src/SelectableCourseWidget.cpp" line="532"/>
+        <location filename="../../src/SelectableCourseWidget.cpp" line="545"/>
         <source>CreditGroup:</source>
         <translation>选课分组：</translation>
     </message>
     <message>
-        <location filename="../../src/SelectableCourseWidget.cpp" line="363"/>
-        <location filename="../../src/SelectableCourseWidget.cpp" line="376"/>
+        <location filename="../../src/SelectableCourseWidget.cpp" line="532"/>
+        <location filename="../../src/SelectableCourseWidget.cpp" line="545"/>
         <source>Required credits:</source>
         <translation>要求学分：</translation>
     </message>
     <message>
-        <location filename="../../src/SelectableCourseWidget.cpp" line="364"/>
-        <location filename="../../src/SelectableCourseWidget.cpp" line="377"/>
+        <location filename="../../src/SelectableCourseWidget.cpp" line="533"/>
+        <location filename="../../src/SelectableCourseWidget.cpp" line="546"/>
         <source>Completed credits:</source>
         <translation>已修学分：</translation>
     </message>
     <message>
-        <location filename="../../src/SelectableCourseWidget.cpp" line="364"/>
-        <location filename="../../src/SelectableCourseWidget.cpp" line="377"/>
+        <location filename="../../src/SelectableCourseWidget.cpp" line="533"/>
+        <location filename="../../src/SelectableCourseWidget.cpp" line="546"/>
         <source>Remain credits:</source>
         <translation>剩余学分：</translation>
     </message>
@@ -410,27 +423,37 @@ Click Cancel to exit.</source>
 <context>
     <name>SelectedCourseResult</name>
     <message>
-        <location filename="../../src/SelectedCourseResult.cpp" line="66"/>
+        <location filename="../../src/SelectedCourseResult.cpp" line="58"/>
+        <source>You didn&apos;t take courses.</source>
+        <translation>你没有选课。</translation>
+    </message>
+    <message>
+        <location filename="../../src/SelectedCourseResult.cpp" line="62"/>
         <source>Current Selected Course</source>
         <translation>当前选课</translation>
     </message>
     <message>
-        <location filename="../../src/SelectedCourseResult.cpp" line="79"/>
+        <location filename="../../src/SelectedCourseResult.cpp" line="62"/>
+        <source>Total credits</source>
+        <translation>总学分</translation>
+    </message>
+    <message>
+        <location filename="../../src/SelectedCourseResult.cpp" line="81"/>
         <source>Course ID</source>
         <translation>课程号</translation>
     </message>
     <message>
-        <location filename="../../src/SelectedCourseResult.cpp" line="80"/>
+        <location filename="../../src/SelectedCourseResult.cpp" line="82"/>
         <source>Course Name</source>
         <translation>课程名</translation>
     </message>
     <message>
-        <location filename="../../src/SelectedCourseResult.cpp" line="81"/>
+        <location filename="../../src/SelectedCourseResult.cpp" line="83"/>
         <source>Course Attribute</source>
         <translation>课程属性</translation>
     </message>
     <message>
-        <location filename="../../src/SelectedCourseResult.cpp" line="82"/>
+        <location filename="../../src/SelectedCourseResult.cpp" line="84"/>
         <source>Course Credit</source>
         <translation>学分</translation>
     </message>
@@ -451,7 +474,7 @@ Click Cancel to exit.</source>
         <translation type="vanished">学分：</translation>
     </message>
     <message>
-        <location filename="../../src/SelectedCourseResult.cpp" line="94"/>
+        <location filename="../../src/SelectedCourseResult.cpp" line="96"/>
         <source>ok</source>
         <translation>确定</translation>
     </message>
@@ -459,7 +482,7 @@ Click Cancel to exit.</source>
 <context>
     <name>TakedCourseWidget</name>
     <message>
-        <location filename="../../src/TakedCourseWidget.cpp" line="191"/>
+        <location filename="../../src/TakedCourseWidget.cpp" line="190"/>
         <source>Course ID</source>
         <translation>课程号</translation>
     </message>
@@ -472,12 +495,12 @@ Click Cancel to exit.</source>
         <translation type="vanished">教学计划</translation>
     </message>
     <message>
-        <location filename="../../src/TakedCourseWidget.cpp" line="192"/>
+        <location filename="../../src/TakedCourseWidget.cpp" line="191"/>
         <source>Course Name</source>
         <translation>课程名</translation>
     </message>
     <message>
-        <location filename="../../src/TakedCourseWidget.cpp" line="193"/>
+        <location filename="../../src/TakedCourseWidget.cpp" line="192"/>
         <source>Course Credit</source>
         <translation>学分</translation>
     </message>
@@ -494,7 +517,7 @@ Click Cancel to exit.</source>
         <translation type="vanished">学时</translation>
     </message>
     <message>
-        <location filename="../../src/TakedCourseWidget.cpp" line="194"/>
+        <location filename="../../src/TakedCourseWidget.cpp" line="193"/>
         <source>Course Grade</source>
         <translation>成绩</translation>
     </message>

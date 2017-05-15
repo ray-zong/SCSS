@@ -132,6 +132,67 @@ void SelectableCourseWidget::setSelectableCourseByGroup(int group, const QVector
     }
 }
 
+void SelectableCourseWidget::displayNotSelecteCourseMsg(const QString &strMsg)
+{
+    QMessageBox msgBox;
+    msgBox.setText(strMsg);
+    msgBox.exec();
+}
+
+QString SelectableCourseWidget::queryNameByNumber(int number)
+{
+    QString strName;
+
+    QSqlDatabase db;
+    if(!createConnection(db))
+    {
+        qDebug() << __FILE__ << __LINE__ << "error: cannot open the database";
+        return false;
+    }
+
+    QSqlQuery query(QString("SELECT DISTINCT "
+                                "course_info.Name "
+                            "FROM "
+                                "course_info "
+                            "WHERE "
+                                "course_info.Number = %1").arg(number), db);
+    while(query.next())
+    {
+        strName = query.value(0).toString();
+    }
+
+    //连接使用完后需要释放回数据库连接池
+    ConnectionPool::closeConnection(db);
+    return strName;
+}
+
+bool SelectableCourseWidget::queryTakedCourseByNumber(int number)
+{
+    bool isFinished = false;
+    QSqlDatabase db;
+    if(!createConnection(db))
+    {
+        qDebug() << __FILE__ << __LINE__ << "error: cannot open the database";
+        return false;
+    }
+
+    QSqlQuery query(QString("SELECT DISTINCT "
+                                "* "
+                            "FROM "
+                                "student_course "
+                            "WHERE "
+                                "student_course.Course_Number = %1").arg(number), db);
+    while(query.next())
+    {
+        isFinished = true;
+    }
+
+    //连接使用完后需要释放回数据库连接池
+    ConnectionPool::closeConnection(db);
+
+    return isFinished;
+}
+
 void SelectableCourseWidget::checkboxClicked()
 {
     QCheckBox* pCheckBox = qobject_cast<QCheckBox *>(QObject::sender());
@@ -151,6 +212,99 @@ void SelectableCourseWidget::checkboxClicked()
     {
         qDebug() << __FILE__ << __LINE__ << "error";
         return;
+    }
+
+    if(isChecked)
+    {
+        //检查先修课程是否完成
+        //1.获取课程号
+        //2.查找是否有先修课程
+        //int number = pTableWidget->item(data.z(), 0)->text().toInt();
+        int prerequisiteCourse_1 = m_mapGroupToSelectableCourse[data.y()].at(data.z()).prerequisiteCourse_1;
+        int prerequisiteCourse_2 = m_mapGroupToSelectableCourse[data.y()].at(data.z()).prerequisiteCourse_2;
+        bool bPreFinished = true;
+        //3.先修课程是否完成
+        if(prerequisiteCourse_1 != 0)
+        {
+            bPreFinished = queryTakedCourseByNumber(prerequisiteCourse_1);
+        }
+
+        if(!bPreFinished && prerequisiteCourse_2 != 0)
+        {
+            bPreFinished = queryTakedCourseByNumber(prerequisiteCourse_2);
+        }
+
+        if(!bPreFinished)
+        {
+            //完成先修课程
+            QString strMsg = tr("You first need to finish the Course") + ":" + "\n";
+            if(prerequisiteCourse_1 != 0)
+            {
+                strMsg += QString::number(prerequisiteCourse_1) + "\t" + queryNameByNumber(prerequisiteCourse_1);
+                strMsg += "\n";
+            }
+            if(prerequisiteCourse_2 != 0)
+            {
+                strMsg += tr("Or") + "\n";
+                strMsg += QString::number(prerequisiteCourse_2) + "\t" + queryNameByNumber(prerequisiteCourse_2);
+            }
+
+            displayNotSelecteCourseMsg(strMsg);
+            pCheckBox->setChecked(false);
+            return;
+        }
+
+        //检查当前选课是否与学期冲突
+        QString strTerm = pTableWidget->item(data.z(), 4)->text().trimmed();
+        QStringList strList = strTerm.split(',', QString::SkipEmptyParts);
+
+        if(strList.count() == 1)
+        {
+            //奇数、偶数校验
+            bool ok = false;
+            int nAdviseTerm = strList.at(0).toInt(&ok);
+            if(ok)
+            {
+                int diff = nAdviseTerm - m_nTerm - 1;
+                if(diff % 2 != 0)
+                {
+                    displayNotSelecteCourseMsg(tr("You can not selecte the course") + "!");
+                    pCheckBox->setChecked(false);
+                    return;
+                }
+            }
+            else
+            {
+                qDebug() << __FILE__ << __LINE__ << "error";
+            }
+
+        }
+        else if(strList.count() > 1)
+        {
+            //包含
+            qDebug() << __FILE__ << __LINE__ << "error";
+            /*
+            auto ite = strList.begin();
+            for(; ite != strList.end(); ++ite)
+            {
+                if(ite->toInt() == m_nTerm)
+                {
+                    break;
+                }
+            }
+
+            if(ite == strList.end())
+            {
+                //未找到
+                displayNotSelecteCourseMsg("The course can not selected in the term!");
+            }
+            */
+        }
+        else
+        {
+            //非法
+            qDebug() << __FILE__ << __LINE__ << "error";
+        }
     }
 
     //设置选中行的颜色//
@@ -286,7 +440,9 @@ bool SelectableCourseWidget::displaySelectCourseInfo(int specialty, int term)
                             "course_attribute.Attribute,"
                             "specialty_course.Credit,"
                             "specialty_course.Term,"
-                            "specialty_course.CreditGroup "
+                            "specialty_course.CreditGroup,"
+                            "specialty_course.PrerequisiteCourse_1,"
+                            "specialty_course.PrerequisiteCourse_2 "
                             "FROM "
                             "specialty_course,"
                             "course_info,"
@@ -312,6 +468,8 @@ bool SelectableCourseWidget::displaySelectCourseInfo(int specialty, int term)
         specialtyCourse.credit = query.value(3).toInt();
         specialtyCourse.term = query.value(4).toString();
         specialtyCourse.creditGroup = query.value(5).toInt();
+        specialtyCourse.prerequisiteCourse_1 = query.value(6).toInt();
+        specialtyCourse.prerequisiteCourse_2 = query.value(7).toInt();
         if(m_mapGroupToSelectableCourse.find(specialtyCourse.creditGroup) ==
                 m_mapGroupToSelectableCourse.end())
         {

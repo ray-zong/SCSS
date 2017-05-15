@@ -122,6 +122,8 @@ public:
     int credit;     //学分
     int creditGroup;//选课分组
     QString term;   //学期 以','相连的数字串
+    int prerequisiteCourse_1; //选修课程1
+    int prerequisiteCourse_2; //选修课程2
 };
 
 //specialty_creditGroup

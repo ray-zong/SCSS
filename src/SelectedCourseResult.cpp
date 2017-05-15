@@ -29,6 +29,7 @@ void SelectedCourseResult::displaySelectedCourse(const QVector<DB_SpecialtyCours
     m_pTableWidget->setRowCount(0);
 
     int row = 0;
+    int sum = 0;
     for(auto ite = vecCourse.begin(); ite != vecCourse.end(); ++ite, ++row)
     {
         m_pTableWidget->insertRow(row);
@@ -48,13 +49,23 @@ void SelectedCourseResult::displaySelectedCourse(const QVector<DB_SpecialtyCours
         pItem = new QTableWidgetItem(QString::number(ite->credit));
         pItem->setTextAlignment(Qt::AlignCenter);
         m_pTableWidget->setItem(row, 3, pItem);
+
+        sum += ite->credit;
+    }
+
+    if(sum == 0)
+    {
+        m_pLabel->setText(tr("You didn't take courses."));
+    }
+    else
+    {
+        m_pLabel->setText(tr("Current Selected Course") + "(" + tr("Total credits") + ":" + QString::number(sum) + ")" + ":" + "\n");
     }
 }
 
 void SelectedCourseResult::initWidget()
 {
     m_pLabel = new QLabel(this);
-    m_pLabel->setText(tr("Current Selected Course") + ":" + "\n");
 
     m_pTableWidget = new QTableWidget(this);
     {
