@@ -48,6 +48,8 @@ private slots:
     void openOptionDialog();
     //专业或者学期改变
     void currentSpecialtyOrTermChanged(int specialty, int term);
+    //修改已修课程
+    void takedCourseChanged();
 
 private:
     Ui::MainWindow *ui;

@@ -40,7 +40,9 @@ SOURCES += src/main.cpp\
     src/AboutSoftware.cpp \
     src/SelectCourseDelegate.cpp \
     src/DatabaseQuery.cpp \
-    src/SelectedCourseResult.cpp
+    src/SelectedCourseResult.cpp \
+    src/AddCourseWidget.cpp \
+    src/ModifyCourseWidget.cpp
 
 HEADERS  += include/MainWindow.h \
     include/OptionTreeWidget.h \
@@ -56,7 +58,9 @@ HEADERS  += include/MainWindow.h \
     include/AboutSoftware.h \
     include/SelectCourseDelegate.h \
     include/DatabaseQuery.h \
-    include/SelectedCourseResult.h
+    include/SelectedCourseResult.h \
+    include/AddCourseWidget.h \
+    include/ModifyCourseWidget.h
 
 FORMS    += ui/MainWindow.ui
 

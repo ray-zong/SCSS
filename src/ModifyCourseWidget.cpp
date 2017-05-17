@@ -1,192 +1,146 @@
-﻿#include "MainWindow.h"
-#include "ui_MainWindow.h"
+﻿#include "ModifyCourseWidget.h"
 
-#include "OptionTreeWidget.h"
-#include "TakedCourseWidget.h"
-#include "SelectableCourseWidget.h"
-#include "RetakeCourseWidget.h"
-#include "IFileAnalysis.h"
-#include "ChooseWidget.h"
-
-#include <QMenu>
-#include <QMenuBar>
-#include <QAction>
-#include <QDebug>
-#include <QStackedWidget>
-#include <QFileDialog>
+#include <QLineEdit>
+#include <QSpinBox>
+#include <QLabel>
 #include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QGridLayout>
+#include <QPushButton>
 #include <QMessageBox>
-#include <QTextCodec>
+#include <QDebug>
+#include <QSqlDatabase>
+#include <QSqlQuery>
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
-    , m_pTabWidget(nullptr)
-    , m_pOptionTreeWidget(nullptr)
-    , m_pRetakeCourseWidget(nullptr)
-    , m_pSelectableCourseWidget(nullptr)
-    , m_pTakedCourseWidget(nullptr)
-    , m_pChooseWidget(nullptr)
+#include "ConnectionPool.h"
 
+ModifyCourseWidget::ModifyCourseWidget(QWidget *parent)
+    : QDialog(parent)
+    , m_pSpinBox_number(nullptr)
+    , m_pLineEdit_name(nullptr)
+    , m_pLineEdit_score(nullptr)
 {
-    ui->setupUi(this);
-
-    setWindowTitle(tr("SCSS(Student Course Selection Guidance System)"));
-    //菜单栏
-    createMenu();
-
-    //主界面
-    createMainWidget();
-
-    //已修课程
-    displayTakedCourse();
-    //未修课程
-    Q_ASSERT(m_pChooseWidget);
-    displaySelectableCourse(m_pChooseWidget->currentSpecialty(),
-                            m_pChooseWidget->currentTerm());
+    initWidget();
 }
 
-MainWindow::~MainWindow()
+ModifyCourseWidget::~ModifyCourseWidget()
 {
-    delete ui;
+
 }
 
-void MainWindow::createMenu()
+void ModifyCourseWidget::setCourseNumber(int number)
 {
-    //文件
-    QMenu *pFile = menuBar()->addMenu(tr("&File"));
+    m_pSpinBox_number->setValue(number);
+}
+
+void ModifyCourseWidget::setCourseName(const QString &name)
+{
+    m_pLineEdit_name->setText(name);
+}
+
+void ModifyCourseWidget::setCourseScore(const QString &score)
+{
+    m_pLineEdit_score->setText(score);
+}
+
+int ModifyCourseWidget::getCourseNumber()
+{
+    return m_pSpinBox_number->value();
+}
+
+QString ModifyCourseWidget::getCourseName()
+{
+    return m_pLineEdit_name->text();
+}
+
+QString ModifyCourseWidget::getCourseScore()
+{
+    return m_pLineEdit_score->text();
+}
+
+void ModifyCourseWidget::initWidget()
+{
+    QLabel *pLabel_number = new QLabel(tr("Course Number"));
+    m_pSpinBox_number = new QSpinBox;
+    m_pSpinBox_number->setRange(0, 99999999);
+    m_pSpinBox_number->setReadOnly(true);
+    m_pSpinBox_number->setButtonSymbols(QSpinBox::NoButtons);
+    m_pSpinBox_number->setReadOnly(true);
+    m_pSpinBox_number->setDisabled(true);
+
+    QLabel *pLabel_name = new QLabel(tr("Course Name"));
+    m_pLineEdit_name = new QLineEdit;
+    m_pLineEdit_name->setReadOnly(true);
+    m_pLineEdit_name->setDisabled(true);
+
+    QLabel *pLabel_score = new QLabel(tr("Course Score"));
+    m_pLineEdit_score = new QLineEdit;
+
+    QPushButton *pPushButton_ok = new QPushButton(tr("Ok"));
+    connect(pPushButton_ok, SIGNAL(clicked()), this, SLOT(ok()));
+    QPushButton *pPushButton_cancel = new QPushButton(tr("Cancel"));
+    connect(pPushButton_cancel, SIGNAL(clicked()), this, SLOT(cancel()));
+
+    QGridLayout *pGridLayout= new QGridLayout(this);
+    pGridLayout->addWidget(pLabel_number, 0, 0);
+    pGridLayout->addWidget(m_pSpinBox_number, 0, 1);
+
+    pGridLayout->addWidget(pLabel_name, 1, 0);
+    pGridLayout->addWidget(m_pLineEdit_name, 1, 1);
+
+    pGridLayout->addWidget(pLabel_score, 2, 0);
+    pGridLayout->addWidget(m_pLineEdit_score, 2, 1);
+
+    pGridLayout->addWidget(pPushButton_ok, 3, 0);
+    pGridLayout->addWidget(pPushButton_cancel, 3, 1);
+}
+
+bool ModifyCourseWidget::modifyCourseScoreByNumber(int number, const QString &score)
+{
+    bool result = false;
+    //连接并打开数据库
+    QSqlDatabase db = ConnectionPool::openConnection();
+    if(!db.isValid())
     {
-        //打开
-        QMenu *pOpen = pFile->addMenu(tr("Open"));
-        //培养方案
-        QAction *pTrainingProgram = pOpen->addAction(tr("Training Program"));
-        connect(pTrainingProgram, &QAction::triggered, this, &MainWindow::openTrainingProgram);
-        //教学计划
-        QAction *pTeachingPlan = pOpen->addAction(tr("Teaching Plan"));
-        connect(pTeachingPlan, &QAction::triggered, this, &MainWindow::openTeachingPlan);
+        qDebug() << __FILE__ << __LINE__ << "error: cannot open the database";
+        return result;
+    }
+    //查询数据
+    QSqlQuery query(QString("UPDATE student_course "
+                            "SET Score = '%1' "
+                            "WHERE "
+                                "student_course.Course_Number = %2").arg(score).arg(number), db);
+    if(query.exec())
+    {
+        //qDebug() << __FILE__ << __LINE__ << "success";
+        result  = true;
+    }
+    else
+    {
+        qDebug() << __FILE__ << __LINE__ << "failed";
+        result  = false;
     }
 
-    //工具
-    //QMenu *pTool = menuBar()->addMenu(tr("&Tool"));
+    //关闭数据库
+    ConnectionPool::closeConnection(db);
+    return result;
+}
+
+void ModifyCourseWidget::ok()
+{
+    if(modifyCourseScoreByNumber(m_pSpinBox_number->value(), m_pLineEdit_score->text()))
     {
-        //选项
-        //QAction *pOption = pTool->addAction(tr("Option") + "...");
-        //connect(pOption, &QAction::triggered, this, &MainWindow::openOptionDialog);
+        accept();
     }
-    //帮助
-    QMenu *pHelp = menuBar()->addMenu(tr("&Help"));
+    else
     {
-        //QAction *pLanguage = pHelp->addAction("Language");
-        //connect(pLanguage, &QAction::triggered, this, &MainWindow::changeLanguage);
-
-        QAction *pAbout = pHelp->addAction(tr("About"));
-        connect(pAbout, &QAction::triggered, this, &MainWindow::aboutSoftware);
+        QMessageBox msgBox;
+        msgBox.setText(tr("Try again, the score is not valid."));
+        msgBox.exec();
     }
 }
 
-void MainWindow::createMainWidget()
+void ModifyCourseWidget::cancel()
 {
-    QWidget *pWidget = this->centralWidget();
-
-    QVBoxLayout *pVLayout = new QVBoxLayout(pWidget);
-
-    m_pChooseWidget = new ChooseWidget(this);
-    connect(m_pChooseWidget, &ChooseWidget::currentSpecialtyOrTermChanged, this, &MainWindow::currentSpecialtyOrTermChanged);
-
-    //已修课程
-    m_pTakedCourseWidget = new TakedCourseWidget(this);
-    //未修课程
-    m_pSelectableCourseWidget = new SelectableCourseWidget(this);
-    //重修课程
-    //m_pRetakeCourseWidget = new RetakeCourseWidget(this);
-
-    m_pTabWidget = new QTabWidget(this);
-    m_pTabWidget->addTab(m_pTakedCourseWidget, tr("Taked Course"));
-    m_pTabWidget->addTab(m_pSelectableCourseWidget, tr("Selectable Course"));
-
-    pVLayout->addWidget(m_pChooseWidget);
-    pVLayout->addWidget(m_pTabWidget);
-}
-
-void MainWindow::displayTakedCourse()
-{
-    Q_ASSERT(m_pTakedCourseWidget);
-
-    m_pTakedCourseWidget->displayTakedCourseInfo();
-}
-
-void MainWindow::displaySelectableCourse(int specialty, int term)
-{
-    Q_ASSERT(m_pSelectableCourseWidget);
-
-    m_pSelectableCourseWidget->displaySelectCourseInfo(specialty, term);
-}
-
-void MainWindow::openTeachingPlan()
-{
-    QString strFileName = QFileDialog::getOpenFileName(this,
-                                                       tr("Open Teaching Plan"), qApp->applicationDirPath(), tr("Files (*.txt)"));
-    if(strFileName.isEmpty())
-        return;
-
-    IFileAnalysis *pFileAnalysis = IFileAnalysis::createFileAnalysis(IFileAnalysis::TeachingPlanFile);
-
-    if(!pFileAnalysis->analysis(strFileName))
-    {
-        qDebug() << __FILE__ << __LINE__ << "open teaching plan error:" << strFileName;
-        return;
-    }
-
-    Q_ASSERT(m_pTakedCourseWidget);
-    QVector<IPersonalData* > vecTeachingPlan = pFileAnalysis->getData();
-    m_pTakedCourseWidget->updateCourseData(vecTeachingPlan);
-    m_pTakedCourseWidget->displayTakedCourseInfo();
-}
-
-void MainWindow::openTrainingProgram()
-{
-    QString strFileName = QFileDialog::getOpenFileName(this,
-                                                       tr("Open Training Program"), qApp->applicationDirPath(), tr("Files (*.txt)"));
-    if(strFileName.isEmpty())
-        return;
-
-    IFileAnalysis *pFileAnalysis = IFileAnalysis::createFileAnalysis(IFileAnalysis::TrainingProgramFile);
-
-    if(!pFileAnalysis->analysis(strFileName))
-    {
-        qDebug() << __FILE__ << __LINE__ << "open training program error:" << strFileName;
-        return;
-    }
-
-    Q_ASSERT(m_pTakedCourseWidget);
-    QVector<IPersonalData* > vecTeachingPlan = pFileAnalysis->getData();
-    m_pTakedCourseWidget->updateCourseData(vecTeachingPlan);
-    m_pTakedCourseWidget->displayTakedCourseInfo();
-}
-
-void MainWindow::changeLanguage()
-{
-    qDebug() << __FILE__ << __LINE__ << "changeLanguage function";
-}
-
-void MainWindow::aboutSoftware()
-{
-    QMessageBox::about(this, tr("SCSS"), tr("Version:1.0.0\n"
-                                            "Rightcopy:Tsinghua University"));
-}
-
-void MainWindow::currentOptionChanged(const int, const int)
-{
-}
-
-void MainWindow::openOptionDialog()
-{
-
-}
-
-void MainWindow::currentSpecialtyOrTermChanged(int specialty, int term)
-{
-    Q_ASSERT(m_pSelectableCourseWidget != NULL);
-
-    m_pSelectableCourseWidget->displaySelectCourseInfo(specialty, term);
+    reject();
 }

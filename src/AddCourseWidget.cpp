@@ -1,192 +1,227 @@
-﻿#include "MainWindow.h"
-#include "ui_MainWindow.h"
+﻿#include "AddCourseWidget.h"
 
-#include "OptionTreeWidget.h"
-#include "TakedCourseWidget.h"
-#include "SelectableCourseWidget.h"
-#include "RetakeCourseWidget.h"
-#include "IFileAnalysis.h"
-#include "ChooseWidget.h"
 
-#include <QMenu>
-#include <QMenuBar>
-#include <QAction>
-#include <QDebug>
-#include <QStackedWidget>
-#include <QFileDialog>
+#include <QLineEdit>
+#include <QSpinBox>
+#include <QLabel>
 #include <QVBoxLayout>
+#include <QHBoxLayout>
+#include <QGridLayout>
+#include <QPushButton>
+#include <QStringListModel>
 #include <QMessageBox>
-#include <QTextCodec>
+#include <QSqlDatabase>
+#include <QSqlQuery>
+#include <QCompleter>
+#include <QDebug>
 
-MainWindow::MainWindow(QWidget *parent)
-    : QMainWindow(parent)
-    , ui(new Ui::MainWindow)
-    , m_pTabWidget(nullptr)
-    , m_pOptionTreeWidget(nullptr)
-    , m_pRetakeCourseWidget(nullptr)
-    , m_pSelectableCourseWidget(nullptr)
-    , m_pTakedCourseWidget(nullptr)
-    , m_pChooseWidget(nullptr)
+#include "ConnectionPool.h"
 
+AddCourseWidget::AddCourseWidget(QWidget *parent)
+    : QDialog(parent)
+    , m_pSpinBox_number(nullptr)
+    , m_pLineEdit_name(nullptr)
+    , m_pLineEdit_score(nullptr)
 {
-    ui->setupUi(this);
-
-    setWindowTitle(tr("SCSS(Student Course Selection Guidance System)"));
-    //菜单栏
-    createMenu();
-
-    //主界面
-    createMainWidget();
-
-    //已修课程
-    displayTakedCourse();
-    //未修课程
-    Q_ASSERT(m_pChooseWidget);
-    displaySelectableCourse(m_pChooseWidget->currentSpecialty(),
-                            m_pChooseWidget->currentTerm());
+    initWidget();
 }
 
-MainWindow::~MainWindow()
+AddCourseWidget::~AddCourseWidget()
 {
-    delete ui;
+
 }
 
-void MainWindow::createMenu()
+void AddCourseWidget::initWidget()
 {
-    //文件
-    QMenu *pFile = menuBar()->addMenu(tr("&File"));
+    QLabel *pLabel_nubmer = new QLabel(tr("Course Number"));
+    m_pSpinBox_number = new QSpinBox;
+    m_pSpinBox_number->setRange(0, 99999999);
+    m_pSpinBox_number->setButtonSymbols(QSpinBox::NoButtons);
+    m_pSpinBox_number->setReadOnly(true);
+    m_pSpinBox_number->setDisabled(true);
+
+    //connect(m_pSpinBox_number, SIGNAL(editingFinished()), this, SLOT(scoreNumberInputFinished()));
+
+    QLabel *pLabel_name = new QLabel(tr("Course Name"));
+    m_pLineEdit_name = new QLineEdit;
+    QCompleter *pCompleter = new QCompleter;
+    m_pStringListModel = new QStringListModel;
+    pCompleter->setModel(m_pStringListModel);
+    m_pLineEdit_name->setCompleter(pCompleter);
+    connect(m_pLineEdit_name, SIGNAL(textEdited(const QString &)), this, SLOT(queryTextChanged(const QString &)));
+    connect(m_pLineEdit_name, SIGNAL(editingFinished()), this, SLOT(scoreNameInputFinished()));
+
+    QLabel *pLabel_score = new QLabel(tr("Course Score"));
+    m_pLineEdit_score = new QLineEdit;
+
+    QPushButton *pPushButton_ok = new QPushButton(tr("Ok"));
+    connect(pPushButton_ok, SIGNAL(clicked()), this, SLOT(ok()));
+    QPushButton *pPushButton_cancel = new QPushButton(tr("Cancel"));
+    connect(pPushButton_cancel, SIGNAL(clicked()), this, SLOT(cancel()));
+
+    QGridLayout *pGridLayout= new QGridLayout(this);
+    pGridLayout->addWidget(pLabel_nubmer, 0, 0);
+    pGridLayout->addWidget(m_pSpinBox_number, 0, 1);
+
+    pGridLayout->addWidget(pLabel_name, 1, 0);
+    pGridLayout->addWidget(m_pLineEdit_name, 1, 1);
+
+    pGridLayout->addWidget(pLabel_score, 2, 0);
+    pGridLayout->addWidget(m_pLineEdit_score, 2, 1);
+
+    pGridLayout->addWidget(pPushButton_ok, 3, 0);
+    pGridLayout->addWidget(pPushButton_cancel, 3, 1);
+}
+
+QStringList AddCourseWidget::queryStringListByName(const QString &name)
+{
+    QStringList textList;
+    //连接并打开数据库
+    QSqlDatabase db = ConnectionPool::openConnection();
+    if(!db.isValid())
     {
-        //打开
-        QMenu *pOpen = pFile->addMenu(tr("Open"));
-        //培养方案
-        QAction *pTrainingProgram = pOpen->addAction(tr("Training Program"));
-        connect(pTrainingProgram, &QAction::triggered, this, &MainWindow::openTrainingProgram);
-        //教学计划
-        QAction *pTeachingPlan = pOpen->addAction(tr("Teaching Plan"));
-        connect(pTeachingPlan, &QAction::triggered, this, &MainWindow::openTeachingPlan);
+        qDebug() << __FILE__ << __LINE__ << "error: cannot open the database";
+        return textList;
+    }
+    //查询数据
+    QSqlQuery query(QString("SELECT "
+                            "course_info.Name "
+                            "FROM "
+                            "course_info "
+                            "WHERE "
+                            "course_info.Name LIKE '%%1%'").arg(name), db);
+    while(query.next())
+    {
+        //qDebug() << __FILE__ << __LINE__ << "success";
+        textList << query.value(0).toString();
     }
 
-    //工具
-    //QMenu *pTool = menuBar()->addMenu(tr("&Tool"));
+    //关闭数据库
+    ConnectionPool::closeConnection(db);
+
+    return textList;
+}
+
+void AddCourseWidget::ok()
+{
+    if(m_pSpinBox_number->value() == 0
+            || m_pLineEdit_name->text().isEmpty()
+            || m_pLineEdit_score->text().isEmpty())
     {
-        //选项
-        //QAction *pOption = pTool->addAction(tr("Option") + "...");
-        //connect(pOption, &QAction::triggered, this, &MainWindow::openOptionDialog);
-    }
-    //帮助
-    QMenu *pHelp = menuBar()->addMenu(tr("&Help"));
-    {
-        //QAction *pLanguage = pHelp->addAction("Language");
-        //connect(pLanguage, &QAction::triggered, this, &MainWindow::changeLanguage);
-
-        QAction *pAbout = pHelp->addAction(tr("About"));
-        connect(pAbout, &QAction::triggered, this, &MainWindow::aboutSoftware);
-    }
-}
-
-void MainWindow::createMainWidget()
-{
-    QWidget *pWidget = this->centralWidget();
-
-    QVBoxLayout *pVLayout = new QVBoxLayout(pWidget);
-
-    m_pChooseWidget = new ChooseWidget(this);
-    connect(m_pChooseWidget, &ChooseWidget::currentSpecialtyOrTermChanged, this, &MainWindow::currentSpecialtyOrTermChanged);
-
-    //已修课程
-    m_pTakedCourseWidget = new TakedCourseWidget(this);
-    //未修课程
-    m_pSelectableCourseWidget = new SelectableCourseWidget(this);
-    //重修课程
-    //m_pRetakeCourseWidget = new RetakeCourseWidget(this);
-
-    m_pTabWidget = new QTabWidget(this);
-    m_pTabWidget->addTab(m_pTakedCourseWidget, tr("Taked Course"));
-    m_pTabWidget->addTab(m_pSelectableCourseWidget, tr("Selectable Course"));
-
-    pVLayout->addWidget(m_pChooseWidget);
-    pVLayout->addWidget(m_pTabWidget);
-}
-
-void MainWindow::displayTakedCourse()
-{
-    Q_ASSERT(m_pTakedCourseWidget);
-
-    m_pTakedCourseWidget->displayTakedCourseInfo();
-}
-
-void MainWindow::displaySelectableCourse(int specialty, int term)
-{
-    Q_ASSERT(m_pSelectableCourseWidget);
-
-    m_pSelectableCourseWidget->displaySelectCourseInfo(specialty, term);
-}
-
-void MainWindow::openTeachingPlan()
-{
-    QString strFileName = QFileDialog::getOpenFileName(this,
-                                                       tr("Open Teaching Plan"), qApp->applicationDirPath(), tr("Files (*.txt)"));
-    if(strFileName.isEmpty())
-        return;
-
-    IFileAnalysis *pFileAnalysis = IFileAnalysis::createFileAnalysis(IFileAnalysis::TeachingPlanFile);
-
-    if(!pFileAnalysis->analysis(strFileName))
-    {
-        qDebug() << __FILE__ << __LINE__ << "open teaching plan error:" << strFileName;
+        QMessageBox msgBox;
+        msgBox.setText(tr("Try again, Input is not valid."));
+        msgBox.exec();
         return;
     }
-
-    Q_ASSERT(m_pTakedCourseWidget);
-    QVector<IPersonalData* > vecTeachingPlan = pFileAnalysis->getData();
-    m_pTakedCourseWidget->updateCourseData(vecTeachingPlan);
-    m_pTakedCourseWidget->displayTakedCourseInfo();
-}
-
-void MainWindow::openTrainingProgram()
-{
-    QString strFileName = QFileDialog::getOpenFileName(this,
-                                                       tr("Open Training Program"), qApp->applicationDirPath(), tr("Files (*.txt)"));
-    if(strFileName.isEmpty())
-        return;
-
-    IFileAnalysis *pFileAnalysis = IFileAnalysis::createFileAnalysis(IFileAnalysis::TrainingProgramFile);
-
-    if(!pFileAnalysis->analysis(strFileName))
+    //连接并打开数据库
+    QSqlDatabase db = ConnectionPool::openConnection();
+    if(!db.isValid())
     {
-        qDebug() << __FILE__ << __LINE__ << "open training program error:" << strFileName;
+        qDebug() << __FILE__ << __LINE__ << "error: cannot open the database";
         return;
     }
+    QSqlQuery query(db);
+    //插入数据
+    QString sql("INSERT INTO student_course(Student_Number, Course_Number, Score)VALUES");
 
-    Q_ASSERT(m_pTakedCourseWidget);
-    QVector<IPersonalData* > vecTeachingPlan = pFileAnalysis->getData();
-    m_pTakedCourseWidget->updateCourseData(vecTeachingPlan);
-    m_pTakedCourseWidget->displayTakedCourseInfo();
+    sql += QString("(%1, %2, '%3')")
+            .arg("100000")
+            .arg(m_pSpinBox_number->value())
+            .arg(m_pLineEdit_score->text());
+
+    if(!query.exec(sql))
+    {
+        qDebug() << __FILE__ << __LINE__ << "error:insert data to table failed!";
+    }
+    //关闭数据库
+    ConnectionPool::closeConnection(db);
+    accept();
 }
 
-void MainWindow::changeLanguage()
+void AddCourseWidget::cancel()
 {
-    qDebug() << __FILE__ << __LINE__ << "changeLanguage function";
+    reject();
 }
 
-void MainWindow::aboutSoftware()
+void AddCourseWidget::scoreNumberInputFinished()
 {
-    QMessageBox::about(this, tr("SCSS"), tr("Version:1.0.0\n"
-                                            "Rightcopy:Tsinghua University"));
+    int number = m_pSpinBox_number->value();
+
+    //连接并打开数据库
+    QSqlDatabase db = ConnectionPool::openConnection();
+    if(!db.isValid())
+    {
+        qDebug() << __FILE__ << __LINE__ << "error: cannot open the database";
+        return ;
+    }
+    //查询数据
+    QSqlQuery query(QString("SELECT "
+                            "course_info.Name "
+                            "FROM "
+                            "course_info "
+                            "WHERE "
+                            "course_info.Number=%1").arg(number), db);
+    if(query.next())
+    {
+        QString result = query.value(0).toString();
+        m_pLineEdit_name->setText(result);
+    }
+    else
+    {
+        QMessageBox msgBox;
+        msgBox.setText(tr("Try again, the number is not valid."));
+        msgBox.exec();
+    }
+
+    //关闭数据库
+    ConnectionPool::closeConnection(db);
+
 }
 
-void MainWindow::currentOptionChanged(const int, const int)
+void AddCourseWidget::queryTextChanged(const QString &text)
 {
+    QStringList textList = queryStringListByName(text);
+
+    m_pStringListModel->setStringList(textList);
 }
 
-void MainWindow::openOptionDialog()
+void AddCourseWidget::scoreNameInputFinished()
 {
+    QString strText = m_pLineEdit_name->text();
+    if(strText.isEmpty())
+    {
+        //QMessageBox msgBox;
+        //msgBox.setText(tr("Try again, the name is empty."));
+        //msgBox.exec();
+        return ;
+    }
 
-}
+    //连接并打开数据库
+    QSqlDatabase db = ConnectionPool::openConnection();
+    if(!db.isValid())
+    {
+        qDebug() << __FILE__ << __LINE__ << "error: cannot open the database";
+        return ;
+    }
+    //查询数据
+    QSqlQuery query(QString("SELECT "
+                            "course_info.Number "
+                            "FROM "
+                            "course_info "
+                            "WHERE "
+                            "course_info.Name='%1'").arg(strText), db);
+    if(query.next())
+    {
+        int result = query.value(0).toInt();
+        m_pSpinBox_number->setValue(result);
+    }
+    else
+    {
+        QMessageBox msgBox;
+        msgBox.setText(tr("Try again, the name is not valid."));
+        msgBox.exec();
+    }
 
-void MainWindow::currentSpecialtyOrTermChanged(int specialty, int term)
-{
-    Q_ASSERT(m_pSelectableCourseWidget != NULL);
-
-    m_pSelectableCourseWidget->displaySelectCourseInfo(specialty, term);
+    //关闭数据库
+    ConnectionPool::closeConnection(db);
 }

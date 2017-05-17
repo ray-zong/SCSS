@@ -95,6 +95,7 @@ void MainWindow::createMainWidget()
 
     //已修课程
     m_pTakedCourseWidget = new TakedCourseWidget(this);
+    connect(m_pTakedCourseWidget, SIGNAL(takedCourseChanged()), this, SLOT(takedCourseChanged()));
     //未修课程
     m_pSelectableCourseWidget = new SelectableCourseWidget(this);
     //重修课程
@@ -189,4 +190,12 @@ void MainWindow::currentSpecialtyOrTermChanged(int specialty, int term)
     Q_ASSERT(m_pSelectableCourseWidget != NULL);
 
     m_pSelectableCourseWidget->displaySelectCourseInfo(specialty, term);
+}
+
+void MainWindow::takedCourseChanged()
+{
+    Q_ASSERT(m_pSelectableCourseWidget != NULL);
+
+    displaySelectableCourse(m_pChooseWidget->currentSpecialty(),
+                            m_pChooseWidget->currentTerm());
 }
