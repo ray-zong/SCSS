@@ -17,13 +17,10 @@ public:
 
 private:
     void initWidget();
-    //查找匹配字段
-    QStringList queryStringListByName(const QString &name);
 
 private slots:
     void ok();
     void cancel();
-    void scoreNumberInputFinished();
     void queryTextChanged(const QString &);
     void scoreNameInputFinished();
 

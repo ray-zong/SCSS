@@ -10,12 +10,10 @@
 #include <QPushButton>
 #include <QStringListModel>
 #include <QMessageBox>
-#include <QSqlDatabase>
-#include <QSqlQuery>
 #include <QCompleter>
 #include <QDebug>
 
-#include "ConnectionPool.h"
+#include "DatabaseQuery.h"
 
 AddCourseWidget::AddCourseWidget(QWidget *parent)
     : QDialog(parent)
@@ -73,35 +71,6 @@ void AddCourseWidget::initWidget()
     pGridLayout->addWidget(pPushButton_cancel, 3, 1);
 }
 
-QStringList AddCourseWidget::queryStringListByName(const QString &name)
-{
-    QStringList textList;
-    //连接并打开数据库
-    QSqlDatabase db = ConnectionPool::openConnection();
-    if(!db.isValid())
-    {
-        qDebug() << __FILE__ << __LINE__ << "error: cannot open the database";
-        return textList;
-    }
-    //查询数据
-    QSqlQuery query(QString("SELECT "
-                            "course_info.Name "
-                            "FROM "
-                            "course_info "
-                            "WHERE "
-                            "course_info.Name LIKE '%%1%'").arg(name), db);
-    while(query.next())
-    {
-        //qDebug() << __FILE__ << __LINE__ << "success";
-        textList << query.value(0).toString();
-    }
-
-    //关闭数据库
-    ConnectionPool::closeConnection(db);
-
-    return textList;
-}
-
 void AddCourseWidget::ok()
 {
     if(m_pSpinBox_number->value() == 0
@@ -113,28 +82,13 @@ void AddCourseWidget::ok()
         msgBox.exec();
         return;
     }
-    //连接并打开数据库
-    QSqlDatabase db = ConnectionPool::openConnection();
-    if(!db.isValid())
-    {
-        qDebug() << __FILE__ << __LINE__ << "error: cannot open the database";
-        return;
-    }
-    QSqlQuery query(db);
-    //插入数据
-    QString sql("INSERT INTO student_course(Student_Number, Course_Number, Score)VALUES");
 
-    sql += QString("(%1, %2, '%3')")
-            .arg("100000")
-            .arg(m_pSpinBox_number->value())
-            .arg(m_pLineEdit_score->text());
-
-    if(!query.exec(sql))
+    if(!DatabaseQuery::instance()->insertDataIntoStudentCourse(m_pSpinBox_number->value(),
+                                                           m_pLineEdit_score->text()))
     {
-        qDebug() << __FILE__ << __LINE__ << "error:insert data to table failed!";
+        qDebug() << __FILE__ << __LINE__ << "error";
     }
-    //关闭数据库
-    ConnectionPool::closeConnection(db);
+
     accept();
 }
 
@@ -143,44 +97,9 @@ void AddCourseWidget::cancel()
     reject();
 }
 
-void AddCourseWidget::scoreNumberInputFinished()
-{
-    int number = m_pSpinBox_number->value();
-
-    //连接并打开数据库
-    QSqlDatabase db = ConnectionPool::openConnection();
-    if(!db.isValid())
-    {
-        qDebug() << __FILE__ << __LINE__ << "error: cannot open the database";
-        return ;
-    }
-    //查询数据
-    QSqlQuery query(QString("SELECT "
-                            "course_info.Name "
-                            "FROM "
-                            "course_info "
-                            "WHERE "
-                            "course_info.Number=%1").arg(number), db);
-    if(query.next())
-    {
-        QString result = query.value(0).toString();
-        m_pLineEdit_name->setText(result);
-    }
-    else
-    {
-        QMessageBox msgBox;
-        msgBox.setText(tr("Try again, the number is not valid."));
-        msgBox.exec();
-    }
-
-    //关闭数据库
-    ConnectionPool::closeConnection(db);
-
-}
-
 void AddCourseWidget::queryTextChanged(const QString &text)
 {
-    QStringList textList = queryStringListByName(text);
+    QStringList textList = DatabaseQuery::instance()->queryStringListByName(text);
 
     m_pStringListModel->setStringList(textList);
 }
@@ -190,38 +109,17 @@ void AddCourseWidget::scoreNameInputFinished()
     QString strText = m_pLineEdit_name->text();
     if(strText.isEmpty())
     {
-        //QMessageBox msgBox;
-        //msgBox.setText(tr("Try again, the name is empty."));
-        //msgBox.exec();
+        QMessageBox msgBox;
+        msgBox.setText(tr("Try again, the name is empty."));
+        msgBox.exec();
         return ;
     }
 
-    //连接并打开数据库
-    QSqlDatabase db = ConnectionPool::openConnection();
-    if(!db.isValid())
-    {
-        qDebug() << __FILE__ << __LINE__ << "error: cannot open the database";
-        return ;
-    }
-    //查询数据
-    QSqlQuery query(QString("SELECT "
-                            "course_info.Number "
-                            "FROM "
-                            "course_info "
-                            "WHERE "
-                            "course_info.Name='%1'").arg(strText), db);
-    if(query.next())
-    {
-        int result = query.value(0).toInt();
-        m_pSpinBox_number->setValue(result);
-    }
-    else
+    int number = DatabaseQuery::instance()->queryNumberByName(strText);
+    if(number == -1)
     {
         QMessageBox msgBox;
         msgBox.setText(tr("Try again, the name is not valid."));
         msgBox.exec();
     }
-
-    //关闭数据库
-    ConnectionPool::closeConnection(db);
 }
